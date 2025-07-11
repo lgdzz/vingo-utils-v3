@@ -1,0 +1,229 @@
+// *****************************************************************************
+// 作者: lgdz
+// 创建时间: 2025/6/25
+// 描述：数据库API
+// *****************************************************************************
+
+package db
+
+import (
+	"errors"
+	"fmt"
+	"github.com/duke-git/lancet/v2/slice"
+	"github.com/fatih/color"
+	"github.com/lgdzz/vingo-utils-v3/ctype"
+	"github.com/lgdzz/vingo-utils-v3/vingo"
+	"gorm.io/gorm"
+	"reflect"
+)
+
+type DatabaseApi struct {
+	*gorm.DB
+	*Common
+	Adapter
+	Config Config
+}
+
+func InitDatabaseApi(config Config) *DatabaseApi {
+	var api *DatabaseApi
+	switch config.Driver {
+	case "pgsql":
+		api = NewPgSql(config)
+		api.Adapter = NewPgsqlAdapter(api.DB)
+	default:
+		api = NewMysql(config)
+		api.Adapter = NewMysqlAdapter(api.DB)
+	}
+
+	// 公共方法
+	api.Common = NewCommon(api.DB)
+	// 设置密文字段的key
+	ctype.Secret = []byte(config.Secret)
+
+	// 注册统一异常插件
+	RegisterAfterQuery(api.DB)
+	RegisterAfterCreate(api.DB)
+	RegisterAfterUpdate(api.DB)
+	RegisterAfterDelete(api.DB)
+	return api
+}
+
+// RegisterAfterQuery 注册统一查询异常插件
+func RegisterAfterQuery(db *gorm.DB) {
+
+	err := db.Callback().Query().After("gorm:query").Register("gormerror:after_query", func(db *gorm.DB) {
+		if db.Error != nil && !errors.Is(db.Error, gorm.ErrRecordNotFound) {
+			_, _ = color.New(color.FgRed).Printf("[DB ERROR] %T: %v\n", db.Error, db.Error)
+			panic(&vingo.DbException{Message: db.Error.Error()})
+		}
+
+		// 如果开启diff
+		if need, ok := db.Get("diff"); ok && need.(bool) {
+			setDiffOldValue(db.Statement.Dest)
+		}
+	})
+	if err != nil {
+		panic(fmt.Sprintf("插件注册失败: %v", err.Error()))
+	}
+}
+
+// RegisterAfterCreate 注册统一创建异常插件
+func RegisterAfterCreate(db *gorm.DB) {
+	err := db.Callback().Create().After("gorm:create").Register("gormerror:after_create", func(db *gorm.DB) {
+		if db.Error != nil {
+			_, _ = color.New(color.FgRed).Printf("[DB ERROR] %T: %v\n", db.Error, db.Error)
+			panic(&vingo.DbException{Message: db.Error.Error()})
+		}
+	})
+	if err != nil {
+		panic(fmt.Sprintf("插件注册失败: %v", err.Error()))
+	}
+}
+
+// RegisterAfterUpdate 注册统一更新异常插件
+func RegisterAfterUpdate(db *gorm.DB) {
+	err := db.Callback().Update().After("gorm:update").Register("gormerror:after_update", func(db *gorm.DB) {
+		if db.Error != nil {
+			_, _ = color.New(color.FgRed).Printf("[DB ERROR] %T: %v\n", db.Error, db.Error)
+			panic(&vingo.DbException{Message: db.Error.Error()})
+		}
+
+		// 如果开启diff
+		if need, ok := db.Get("diff"); ok && need.(bool) {
+			setDiffNewValue(db.Statement.Dest)
+		}
+	})
+	if err != nil {
+		panic(fmt.Sprintf("插件注册失败: %v", err.Error()))
+	}
+}
+
+// RegisterAfterDelete 注册统一删除异常插件
+func RegisterAfterDelete(db *gorm.DB) {
+	err := db.Callback().Delete().After("gorm:delete").Register("gormerror:after_delete", func(db *gorm.DB) {
+		if db.Error != nil {
+			_, _ = color.New(color.FgRed).Printf("[DB ERROR] %T: %v\n", db.Error, db.Error)
+			panic(&vingo.DbException{Message: db.Error.Error()})
+		}
+	})
+	if err != nil {
+		panic(fmt.Sprintf("插件注册失败: %v", err.Error()))
+	}
+}
+
+// setDiffOldValue 设置Diff旧值
+func setDiffOldValue(dest any) {
+	rv := reflect.ValueOf(dest)
+	if rv.Kind() != reflect.Ptr {
+		return // 必须是指针
+	}
+	rv = rv.Elem()
+	if rv.Kind() != reflect.Struct {
+		return // 必须是结构体
+	}
+
+	field := rv.FieldByName("Diff")
+	if !field.IsValid() || field.Kind() != reflect.Ptr || !field.CanSet() {
+		return // 不存在或不是指针字段或不可设置
+	}
+
+	if field.IsNil() {
+		// 创建并赋值新的 DiffBox
+		diffBox := &DiffBox{
+			Old: rv.Interface(),
+		}
+		field.Set(reflect.ValueOf(diffBox))
+	}
+}
+
+// setDiffNewValue 设置Diff新值
+func setDiffNewValue(dest any) {
+	rv := reflect.ValueOf(dest)
+	if rv.Kind() != reflect.Ptr {
+		return // 必须是指针
+	}
+	rv = rv.Elem()
+	if rv.Kind() != reflect.Struct {
+		return // 必须是结构体
+	}
+
+	field := rv.FieldByName("Diff")
+	if !field.IsValid() || field.Kind() != reflect.Ptr || !field.CanSet() {
+		return // 不存在或不是指针字段或不可设置
+	}
+
+	if !field.IsNil() {
+		diffBoxValue := field.Elem()                // *DiffBox -> DiffBox
+		newField := diffBoxValue.FieldByName("New") // 访问 New 字段
+		if newField.IsValid() && newField.CanSet() {
+			newField.Set(reflect.ValueOf(rv.Interface()))
+
+			// 调用 Compare 方法
+			if diffBox, ok := field.Interface().(*DiffBox); ok {
+				diffBox.Compare()
+			}
+		}
+
+	}
+}
+
+// QueryList 列表查询
+// 如果传入的PageQuery.Limit.Page为nil，则为不分页查询，否则为分页查询
+func QueryList[T any](db *gorm.DB, pq PageQuery, iteratee func(i int, item T) any) any {
+	// 不分页模式
+	if pq.Limit.Page == nil {
+		var result []T
+		if pq.Limit.Size > 0 {
+			db = db.Limit(pq.Limit.Size)
+		}
+		db.Scan(&result)
+		if iteratee != nil {
+			return slice.Map(result, func(index int, item T) any {
+				return iteratee(index, item)
+			})
+		}
+		return result
+	}
+
+	// 分页模式
+	return NewPage(QueryOption[T]{
+		Db:       db,
+		Query:    pq,
+		Iteratee: iteratee,
+	})
+}
+
+func mustFind[T any](db *gorm.DB, enableDiff bool, condition ...any) (row T) {
+	query := db
+	if enableDiff {
+		query = db.Set("diff", true)
+	}
+	if err := query.First(&row, condition...).Error; err != nil {
+		typeName := reflect.TypeOf(row).Name()
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			panic(fmt.Sprintf("Model[%s]记录不存在", typeName))
+		}
+		panic(fmt.Sprintf("Model[%s]查询失败，错误:%v", typeName, err.Error()))
+	}
+	return
+}
+
+// Find 根据任意条件查询
+func Find[T any](db *gorm.DB, condition ...any) T {
+	return mustFind[T](db, false, condition...)
+}
+
+// FindWithDiff 根据任意条件查询，并开启 diff 处理
+func FindWithDiff[T any](db *gorm.DB, condition ...any) T {
+	return mustFind[T](db, true, condition...)
+}
+
+// FindById 根据 ID 查询
+func FindById[T any](db *gorm.DB, id int) T {
+	return mustFind[T](db, false, id)
+}
+
+// FindByIdWithDiff 根据 ID 查询，并开启 diff 处理
+func FindByIdWithDiff[T any](db *gorm.DB, id int) T {
+	return mustFind[T](db, true, id)
+}
