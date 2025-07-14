@@ -101,15 +101,12 @@ func BuildProject(value string, version string) {
 	fmt.Println("开始打包:", osName, gOARCH)
 
 	var moduleName = vingo.GetModuleName()
-	var outputName = fmt.Sprintf("%v.%v-%v", moduleName, version, osName)
+	var outputName = fmt.Sprintf("%v.%v-%v_%v", moduleName, version, osName, gOARCH)
 	if osName == "windows" {
 		outputName += ".exe"
 	}
 
-	err = os.Mkdir("output", 0777)
-	if err != nil {
-		log.Println(err.Error())
-	}
+	_ = os.MkdirAll("output", 0777)
 
 	outputName = filepath.Join("output", outputName)
 
