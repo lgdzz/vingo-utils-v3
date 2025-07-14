@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -105,6 +106,13 @@ func BuildProject(value string, version string) {
 		outputName += ".exe"
 	}
 
+	err = os.Mkdir("output", 0777)
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	outputName = filepath.Join("output", outputName)
+
 	log.Println(strings.Join([]string{"go", "build", "-ldflags=-X " + moduleName + "/extend/config.version=" + version, "-o", outputName}, " "))
 
 	// 执行打包命令
@@ -121,8 +129,8 @@ func BuildProject(value string, version string) {
 		log.Println("获取打包文件信息错误：", err.Error())
 	}
 	fileSize := fileInfo.Size()
-	log.Println("✅文件名称：", outputName)
-	log.Println("✅文件大小：", vingo.FormatBytes(fileSize, 2))
-	log.Println("✅打包完成")
+	log.Println("✅ 文件名称：", outputName)
+	log.Println("✅ 文件大小：", vingo.FormatBytes(fileSize, 2))
+	log.Println("✅ 打包完成")
 	os.Exit(0)
 }
