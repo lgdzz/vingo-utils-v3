@@ -6,10 +6,17 @@
 
 package db
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type Adapter interface {
-	QueryWhereFindInSet(db *gorm.DB, query TextSlice, column string) *gorm.DB
+	GetDatabaseName() (string, error)
+	GetTableComment(dbName, tableName string) (string, error)
+	GetColumns(tableName string) ([]Column, error)
 
-	Book() string // 数据库字典
+	Book() string                                  // 数据库字典
+	ModelFiles(tableNames ...string) (bool, error) // 模型文件
+
+	QueryWhereFindInSet(db *gorm.DB, query TextSlice, column string) *gorm.DB
 }

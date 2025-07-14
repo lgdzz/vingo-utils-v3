@@ -12,6 +12,7 @@ import (
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/formatter"
 	"github.com/google/uuid"
+	"math/big"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -204,4 +205,17 @@ func ToString(value any) string {
 
 func ToMap[T any, K comparable, V any](array []T, iteratee func(T) (K, V)) map[K]V {
 	return convertor.ToMap(array, iteratee)
+}
+
+// FormatBytes 将字节转换为可读文本
+func FormatBytes(size int64, precision int) string {
+	units := []string{"B", "KB", "MB", "GB", "TB", "PB"}
+	i := 0
+	fsize := big.NewFloat(float64(size))
+	for fsize.Cmp(big.NewFloat(1024)) >= 0 && i < 6 {
+		fsize.Quo(fsize, big.NewFloat(1024))
+		i++
+	}
+	format := fmt.Sprintf("%%.%df %%s", precision)
+	return fmt.Sprintf(format, fsize, units[i])
 }

@@ -17,15 +17,15 @@ import (
 	"reflect"
 )
 
-type DatabaseApi struct {
+type Api struct {
 	*gorm.DB
 	*Common
 	Adapter
 	Config Config
 }
 
-func InitDatabaseApi(config Config) *DatabaseApi {
-	var api *DatabaseApi
+func NewDatabase(config Config) *Api {
+	var api *Api
 	switch config.Driver {
 	case "pgsql":
 		api = NewPgSql(config)

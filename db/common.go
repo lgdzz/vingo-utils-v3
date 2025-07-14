@@ -27,6 +27,28 @@ type Common struct {
 	*gorm.DB
 }
 
+type Table struct {
+	TableName    string
+	ModelName    string
+	TableComment string
+	TableColumns []Column
+	Date         string
+}
+
+type Column struct {
+	Field    string
+	Field2   string
+	Type     string
+	Null     string
+	Key      string
+	Default  sql.NullString
+	Extra    string
+	Comment  string
+	DataName string
+	DataType string
+	JsonName string
+}
+
 func NewCommon(db *gorm.DB) *Common {
 	return &Common{DB: db}
 }

@@ -24,7 +24,7 @@ type HookOption struct {
 	Port      uint
 	Copyright string
 	Debug     bool
-	Database  *db.Config
+	Database  *db.Api
 	Redis     *redis.Config
 	startTime time.Time // 启动时间
 }
@@ -86,10 +86,13 @@ func InitRouter(hook *Hook) {
 	fmt.Println(fmt.Sprintf("+ 服务端口：%d", option.Port))
 	fmt.Println(fmt.Sprintf("+ 调试模式：%v", option.Debug))
 	if option.Database != nil {
-		fmt.Println(fmt.Sprintf("+ %v：%v:%v db:%v", option.Database.Driver, option.Database.Host, option.Database.Port, option.Database.Dbname))
+		fmt.Println(fmt.Sprintf("+ %v：%v:%v db:%v", option.Database.Config.Driver, option.Database.Config.Host, option.Database.Config.Port, option.Database.Config.Dbname))
 	}
 	if option.Redis != nil {
-		fmt.Println(fmt.Sprintf("+ redis：%v:%v db:%v", option.Redis.Host, option.Redis.Port, option.Redis.Select))
+		fmt.Println(fmt.Sprintf("+ redis：%v:%v db:%v prefix:%v", option.Redis.Host, option.Redis.Port, option.Redis.Select, option.Redis.Prefix))
+	}
+	if option.Copyright == "" {
+		option.Copyright = fmt.Sprintf("Copyright © %d lgdz", time.Now().Year())
 	}
 
 	option.startTime = time.Now()
