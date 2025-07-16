@@ -87,6 +87,7 @@ func RegisterBeforeUpdate(api *Api) {
 	err := api.DB.Callback().Update().Before("gorm:before_update").Register("vingo:before_update", func(db *gorm.DB) {
 		// 处理diff新值
 		description := setDiffNewValue(db.Statement.Dest)
+		// 变更日志
 		if api.ChangeLog != nil {
 			var id int
 			var name string
