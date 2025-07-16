@@ -61,6 +61,14 @@ func (s *Common) Diff() *gorm.DB {
 	return s.DB.Set("diff", true)
 }
 
+func (s *Common) Operator(id int, name string) *gorm.DB {
+	return s.DB.Set("operatorId", id).Set("operatorName", name)
+}
+
+func (s *Common) OperatorWithTx(tx *gorm.DB, id int, name string) *gorm.DB {
+	return tx.Set("operatorId", id).Set("operatorName", name)
+}
+
 // AutoCommit 自动提交事务
 func (s *Common) AutoCommit(tx *gorm.DB, callback ...func()) {
 	if r := recover(); r != nil {
@@ -86,8 +94,8 @@ func (s *Common) AutoCommit(tx *gorm.DB, callback ...func()) {
 	}
 }
 
-// Commit 快捷事务
-func (s *Common) Commit(handler func(*gorm.DB)) {
+// FastCommit 快捷事务
+func (s *Common) FastCommit(handler func(*gorm.DB)) {
 	tx := s.DB.Begin()
 	defer s.AutoCommit(tx)
 	handler(tx)

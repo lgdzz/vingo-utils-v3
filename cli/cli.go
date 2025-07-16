@@ -126,8 +126,8 @@ func BuildProject(value string, version string) {
 		log.Println("获取打包文件信息错误：", err.Error())
 	}
 	fileSize := fileInfo.Size()
-	log.Println("✅ 文件名称：", outputName)
-	log.Println("✅ 文件大小：", vingo.FormatBytes(fileSize, 2))
+	log.Println("✅ 文件名称:", outputName)
+	log.Println("✅ 文件大小:", vingo.FormatBytes(fileSize, 2))
 	log.Println("✅ 打包完成")
 	os.Exit(0)
 }

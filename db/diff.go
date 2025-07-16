@@ -119,7 +119,7 @@ func (s *DiffBox) IsChangeAnd(columns ...string) bool {
 // ResultContent 生成变更摘要
 func (s *DiffBox) ResultContent() string {
 	s.ensureCompared()
-	if len(*s.Result) == 0 {
+	if !s.HasChange() {
 		return "无修改"
 	}
 	var builder strings.Builder
@@ -127,4 +127,8 @@ func (s *DiffBox) ResultContent() string {
 		builder.WriteString(item.Message)
 	}
 	return builder.String()
+}
+
+func (s *DiffBox) HasChange() bool {
+	return len(*s.Result) > 0
 }

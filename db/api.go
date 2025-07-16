@@ -9,6 +9,7 @@ package db
 import (
 	"errors"
 	"fmt"
+	"github.com/duke-git/lancet/v2/pointer"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/fatih/color"
 	"github.com/lgdzz/vingo-utils-v3/ctype"
@@ -21,7 +22,8 @@ type Api struct {
 	*gorm.DB
 	*Common
 	Adapter
-	Config Config
+	Config    Config
+	ChangeLog func(operatorId int, operatorName string, tableName string, description *string)
 }
 
 func NewDatabase(config Config) *Api {
@@ -41,17 +43,18 @@ func NewDatabase(config Config) *Api {
 	ctype.Secret = []byte(config.Secret)
 
 	// 注册统一异常插件
-	RegisterAfterQuery(api.DB)
-	RegisterAfterCreate(api.DB)
-	RegisterAfterUpdate(api.DB)
-	RegisterAfterDelete(api.DB)
+	RegisterAfterQuery(api)
+	RegisterAfterCreate(api)
+	RegisterBeforeUpdate(api)
+	RegisterAfterUpdate(api)
+	RegisterAfterDelete(api)
 	return api
 }
 
 // RegisterAfterQuery 注册统一查询异常插件
-func RegisterAfterQuery(db *gorm.DB) {
+func RegisterAfterQuery(api *Api) {
 
-	err := db.Callback().Query().After("gorm:query").Register("gormerror:after_query", func(db *gorm.DB) {
+	err := api.DB.Callback().Query().After("gorm:query").Register("vingo:after_query", func(db *gorm.DB) {
 		if db.Error != nil && !errors.Is(db.Error, gorm.ErrRecordNotFound) {
 			_, _ = color.New(color.FgRed).Printf("[DB ERROR] %T: %v\n", db.Error, db.Error)
 			panic(&vingo.DbException{Message: db.Error.Error()})
@@ -68,11 +71,32 @@ func RegisterAfterQuery(db *gorm.DB) {
 }
 
 // RegisterAfterCreate 注册统一创建异常插件
-func RegisterAfterCreate(db *gorm.DB) {
-	err := db.Callback().Create().After("gorm:create").Register("gormerror:after_create", func(db *gorm.DB) {
+func RegisterAfterCreate(api *Api) {
+	err := api.DB.Callback().Create().After("gorm:create").Register("vingo:after_create", func(db *gorm.DB) {
 		if db.Error != nil {
 			_, _ = color.New(color.FgRed).Printf("[DB ERROR] %T: %v\n", db.Error, db.Error)
 			panic(&vingo.DbException{Message: db.Error.Error()})
+		}
+	})
+	if err != nil {
+		panic(fmt.Sprintf("插件注册失败: %v", err.Error()))
+	}
+}
+
+func RegisterBeforeUpdate(api *Api) {
+	err := api.DB.Callback().Update().Before("gorm:before_update").Register("vingo:before_update", func(db *gorm.DB) {
+		// 处理diff新值
+		description := setDiffNewValue(db.Statement.Dest)
+		if api.ChangeLog != nil {
+			var id int
+			var name string
+			if operatorId, ok := db.Get("operatorId"); ok {
+				id = operatorId.(int)
+			}
+			if operatorName, ok := db.Get("operatorName"); ok {
+				name = operatorName.(string)
+			}
+			api.ChangeLog(id, name, db.Statement.Table, description)
 		}
 	})
 	if err != nil {
@@ -81,16 +105,11 @@ func RegisterAfterCreate(db *gorm.DB) {
 }
 
 // RegisterAfterUpdate 注册统一更新异常插件
-func RegisterAfterUpdate(db *gorm.DB) {
-	err := db.Callback().Update().After("gorm:update").Register("gormerror:after_update", func(db *gorm.DB) {
+func RegisterAfterUpdate(api *Api) {
+	err := api.DB.Callback().Update().After("gorm:update").Register("vingo:after_update", func(db *gorm.DB) {
 		if db.Error != nil {
 			_, _ = color.New(color.FgRed).Printf("[DB ERROR] %T: %v\n", db.Error, db.Error)
 			panic(&vingo.DbException{Message: db.Error.Error()})
-		}
-
-		// 如果开启diff
-		if need, ok := db.Get("diff"); ok && need.(bool) {
-			setDiffNewValue(db.Statement.Dest)
 		}
 	})
 	if err != nil {
@@ -99,8 +118,8 @@ func RegisterAfterUpdate(db *gorm.DB) {
 }
 
 // RegisterAfterDelete 注册统一删除异常插件
-func RegisterAfterDelete(db *gorm.DB) {
-	err := db.Callback().Delete().After("gorm:delete").Register("gormerror:after_delete", func(db *gorm.DB) {
+func RegisterAfterDelete(api *Api) {
+	err := api.DB.Callback().Delete().After("gorm:delete").Register("vingo:after_delete", func(db *gorm.DB) {
 		if db.Error != nil {
 			_, _ = color.New(color.FgRed).Printf("[DB ERROR] %T: %v\n", db.Error, db.Error)
 			panic(&vingo.DbException{Message: db.Error.Error()})
@@ -137,19 +156,19 @@ func setDiffOldValue(dest any) {
 }
 
 // setDiffNewValue 设置Diff新值
-func setDiffNewValue(dest any) {
+func setDiffNewValue(dest any) *string {
 	rv := reflect.ValueOf(dest)
 	if rv.Kind() != reflect.Ptr {
-		return // 必须是指针
+		return nil // 必须是指针
 	}
 	rv = rv.Elem()
 	if rv.Kind() != reflect.Struct {
-		return // 必须是结构体
+		return nil // 必须是结构体
 	}
 
 	field := rv.FieldByName("Diff")
 	if !field.IsValid() || field.Kind() != reflect.Ptr || !field.CanSet() {
-		return // 不存在或不是指针字段或不可设置
+		return nil // 不存在或不是指针字段或不可设置
 	}
 
 	if !field.IsNil() {
@@ -161,10 +180,16 @@ func setDiffNewValue(dest any) {
 			// 调用 Compare 方法
 			if diffBox, ok := field.Interface().(*DiffBox); ok {
 				diffBox.Compare()
+				if diffBox.HasChange() {
+					return pointer.Of(diffBox.ResultContent())
+				} else {
+					return nil
+				}
 			}
 		}
 
 	}
+	return nil
 }
 
 // QueryList 列表查询
