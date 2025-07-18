@@ -23,6 +23,7 @@ import(
 type {{ .ModelName }} struct {
 	{{ range .TableColumns }}{{ .DataName }}   {{ .DataType }}  ` + "`gorm:\"{{ if eq .Key \"PRI\" }}primaryKey;{{ end }}column:{{ .Field }}\" json:\"{{ .JsonName }}\"`" + ` {{ if .Comment }}// {{ .Comment }}{{ end }}
 	{{ end }}
+	Diff *db.DiffBox ` + "`gorm:\"column:-\" json:\"-\"`" + `
 }
 
 func (s *{{ .ModelName }}) TableName() string {

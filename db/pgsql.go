@@ -176,7 +176,7 @@ func (s *PgsqlAdapter) modelFile(tableName string) (bool, error) {
 			col.DataType = "float64"
 		case strutil.HasPrefixAny(col.Type, []string{"boolean", "bool"}):
 			col.DataType = "bool"
-		case col.Field == "deleted_at":
+		case col.Field == "deletedAt":
 			col.DataType = "gorm.DeletedAt"
 		case strutil.HasPrefixAny(col.Type, []string{"datetime"}):
 			col.DataType = "*moment.LocalTime"
