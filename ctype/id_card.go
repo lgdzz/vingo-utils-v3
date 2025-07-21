@@ -92,3 +92,19 @@ func (s IdCard) IsValid() bool {
 	}
 	return false
 }
+
+func (s IdCard) Age() int {
+	return s.Analysis().Age
+}
+
+func (s IdCard) Birthday() string {
+	return s.Analysis().Birthday
+}
+
+func (s IdCard) RegionCode() string {
+	return s.Analysis().RegionCode
+}
+
+func (s IdCard) String() string {
+	return string(s)
+}

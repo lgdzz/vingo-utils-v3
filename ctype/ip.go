@@ -7,3 +7,7 @@
 package ctype
 
 type IP string
+
+func (s IP) String() string {
+	return string(s)
+}
