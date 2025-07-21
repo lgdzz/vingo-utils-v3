@@ -8,7 +8,10 @@ package ctype
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
+	"github.com/duke-git/lancet/v2/random"
+	"github.com/lgdzz/vingo-utils-v3/cryptor"
 	"github.com/lgdzz/vingo-utils-v3/moment"
 	"strings"
 	"time"
@@ -26,6 +29,12 @@ const (
 
 type Password Ciphertext
 
+type PasswordObj struct {
+	PasswordMd5 string            `json:"passwordMd5"`
+	Salt        string            `json:"salt"`
+	CreatedAt   *moment.LocalTime `json:"createdAt,omitempty"`
+}
+
 // ========== GORM 接口 ==========
 
 func (s Password) Value() (driver.Value, error) {
@@ -40,17 +49,28 @@ func (s Password) String() string {
 	return string(s)
 }
 
-// ========== 密码强度检查 ==========
+// NewPassword 生成密码（加密 + salt + 时间）
+func NewPassword(raw string, level int) Password {
+	checkPasswordLevel(raw, level)
+	salt := random.RandString(6)
+	md5 := cryptor.Md5(cryptor.Md5(raw) + salt)
+	obj := &PasswordObj{
+		PasswordMd5: md5,
+		Salt:        salt,
+		CreatedAt:   moment.NowLocalTime(),
+	}
+	return mustMarshalPassword(obj)
+}
 
-func (s Password) CheckLevel(level int) {
-	passwordPart, _ := s.Split()
-	n := len(passwordPart)
+// checkPasswordLevel 密码强度检查
+func checkPasswordLevel(raw string, level int) {
+	n := len(raw)
 
 	if n < MinPasswordLen || n > MaxPasswordLen {
 		panic(fmt.Sprintf("密码长度需符合 %d-%d 个字符长度要求", MinPasswordLen, MaxPasswordLen))
 	}
 
-	hasDigit, hasUpper, hasLower, hasSpecial := analyzeChars(passwordPart)
+	hasDigit, hasUpper, hasLower, hasSpecial := analyzeChars(raw)
 
 	switch level {
 	case PasswordMedium:
@@ -64,44 +84,54 @@ func (s Password) CheckLevel(level int) {
 	}
 }
 
-// MarkTime 标记密码创建时间
-func (s *Password) MarkTime() {
-	if _, t := s.Split(); t == nil {
-		*s = Password(fmt.Sprintf("%s,%s", s.String(), time.Now().Format(moment.DateTimeFormat)))
-	}
+// split 拆分为明文加密串、salt 和时间（加密部分）
+func (s Password) split() (password string, salt string, createdAt *moment.LocalTime) {
+	obj := s.getObj()
+	return obj.PasswordMd5, obj.Salt, obj.CreatedAt
 }
 
-// Split 分割密码与时间
-func (s Password) Split() (password string, createdAt *moment.LocalTime) {
-	parts := strings.SplitN(string(s), ",", 2)
-	password = parts[0]
-	if len(parts) == 2 {
-		createdAt = moment.ToLocalTime(parts[1])
-	}
-	return
-}
-
-// CreatedAt 获取创建时间（可空）
+// CreatedAt 获取密码创建时间
 func (s Password) CreatedAt() *moment.LocalTime {
-	_, t := s.Split()
+	_, _, t := s.split()
 	return t
 }
 
-// Match 判断密码是否等于指定原始密码（不包含时间部分）
+// Match 判断密码是否等于指定原始密码
 func (s Password) Match(raw string) bool {
-	password, _ := s.Split()
-	return password == raw
+	password, salt, _ := s.split()
+	return password == cryptor.Md5(cryptor.Md5(raw)+salt)
 }
 
-// IsExpired 检查密码是否已过期（从创建时间起超过 day）
+// IsExpired 检查是否过期
 func (s Password) IsExpired(day int) bool {
-	createdAt := s.CreatedAt()
-	if createdAt == nil {
-		return false // 没有创建时间，视为永不过期
+	t := s.CreatedAt()
+	if t == nil {
+		return false
 	}
-	return time.Since(createdAt.Time()) > time.Duration(day)*24*time.Hour
+	return time.Since(t.Time()) > time.Duration(day)*24*time.Hour
 }
 
+func mustMarshalPassword(obj *PasswordObj) Password {
+	bs, err := json.Marshal(obj)
+	if err != nil {
+		panic(fmt.Sprintf("密码序列化失败: %v", err))
+	}
+	return Password(bs)
+}
+
+func (s Password) getObj() *PasswordObj {
+	str := strings.TrimSpace(string(s))
+	if str == "" {
+		return &PasswordObj{}
+	}
+	var obj PasswordObj
+	if err := json.Unmarshal([]byte(str), &obj); err != nil {
+		panic(fmt.Sprintf("密码格式错误，无法解析: %v", err))
+	}
+	return &obj
+}
+
+// 工具函数：字符分析
 func analyzeChars(pass string) (hasDigit, hasUpper, hasLower, hasSpecial bool) {
 	for _, ch := range pass {
 		switch {
@@ -118,6 +148,7 @@ func analyzeChars(pass string) (hasDigit, hasUpper, hasLower, hasSpecial bool) {
 	return
 }
 
+// 工具函数：统计 true 个数
 func countTrue(flags ...bool) int {
 	count := 0
 	for _, f := range flags {
