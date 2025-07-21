@@ -34,6 +34,11 @@ func (r *RedisStore) Get(id string, clear bool) string {
 }
 
 func (r *RedisStore) Verify(id, answer string, clear bool) bool {
+	if id == "" {
+		panic("验证码Id不能为空")
+	} else if answer == "" {
+		panic("验证码不能为空")
+	}
 	val := r.Get(id, clear)
 	return val == answer
 }

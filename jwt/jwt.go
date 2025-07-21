@@ -29,7 +29,7 @@ type Body[T any] struct {
 	CheckTK bool `json:"checkTk"`
 
 	// 默认有效期24小时
-	Hour uint `json:"hour"`
+	Hour int `json:"hour"`
 
 	// 单点登录凭证（内部处理，无需传入）
 	Ticket *Ticket `json:"ticket"`

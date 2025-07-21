@@ -104,7 +104,7 @@ func (s *MysqlAdapter) GetTableComment(dbName, tableName string) (string, error)
 
 func (s *MysqlAdapter) GetColumns(tableName string) ([]Column, error) {
 	var columns []Column
-	err := s.db.Raw("SHOW FULL COLUMNS FROM " + tableName).Scan(&columns).Error
+	err := s.db.Raw(fmt.Sprintf("SHOW FULL COLUMNS FROM `%v`", tableName)).Scan(&columns).Error
 	return columns, err
 }
 

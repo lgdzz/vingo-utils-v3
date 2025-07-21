@@ -85,6 +85,7 @@ func RegisterAfterCreate(api *Api) {
 
 func RegisterBeforeUpdate(api *Api) {
 	err := api.DB.Callback().Update().Before("gorm:before_update").Register("vingo:before_update", func(db *gorm.DB) {
+		fmt.Println("aaaaaa")
 		// 处理diff新值
 		description := setDiffNewValue(db.Statement.Dest)
 		// 变更日志
