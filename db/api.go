@@ -188,21 +188,41 @@ func setDiffNewValue(dest any) *string {
 	return nil
 }
 
+type QueryListOption[T any] struct {
+	Iteratee     func(i int, item T) any
+	IsTree       bool // 是否返回树结构，只支持id,pid为number类型的主键，其他情况使用ListCallback自定义
+	ListCallback func(list []T) any
+}
+
 // QueryList 列表查询
 // 如果传入的PageQuery.Limit.Page为nil，则为不分页查询，否则为分页查询
-func QueryList[T any](db *gorm.DB, pq PageQuery, iteratee func(i int, item T) any) any {
+func QueryList[T any](db *gorm.DB, pq PageQuery, option *QueryListOption[T]) any {
 	// 不分页模式
 	if pq.Limit.Page == nil {
 		var result []T
 		if pq.Limit.Size > 0 {
 			db = db.Limit(pq.Limit.Size)
 		}
-		db.Scan(&result)
-		if iteratee != nil {
-			return slice.Map(result, func(index int, item T) any {
-				return iteratee(index, item)
-			})
+		if pq.OrderRaw != nil {
+			db = db.Order(pq.OrderRaw)
 		}
+		db.Scan(&result)
+		if option != nil {
+			if option.Iteratee != nil {
+				return slice.Map(result, func(index int, item T) any {
+					return option.Iteratee(index, item)
+				})
+			}
+
+			if option.IsTree {
+				return vingo.FastTree[float64](result)
+			}
+
+			if option.ListCallback != nil {
+				return option.ListCallback(result)
+			}
+		}
+
 		return result
 	}
 
@@ -210,7 +230,7 @@ func QueryList[T any](db *gorm.DB, pq PageQuery, iteratee func(i int, item T) an
 	return NewPage(QueryOption[T]{
 		Db:       db,
 		Query:    pq,
-		Iteratee: iteratee,
+		Iteratee: option.Iteratee,
 	})
 }
 

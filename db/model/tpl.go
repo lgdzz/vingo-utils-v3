@@ -31,6 +31,6 @@ func (s *{{ .ModelName }}) TableName() string {
 }
 
 type {{ .ModelName }}Query struct {
-	*db.PageQuery
+	db.PageQuery
 }
 `

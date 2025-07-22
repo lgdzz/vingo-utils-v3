@@ -61,10 +61,12 @@ func (s *Common) Diff() *gorm.DB {
 	return s.DB.Set("diff", true)
 }
 
+// Operator diff操作人
 func (s *Common) Operator(id int, name string) *gorm.DB {
 	return s.DB.Set("operatorId", id).Set("operatorName", name)
 }
 
+// OperatorWithTx diff操作人
 func (s *Common) OperatorWithTx(tx *gorm.DB, id int, name string) *gorm.DB {
 	return tx.Set("operatorId", id).Set("operatorName", name)
 }
