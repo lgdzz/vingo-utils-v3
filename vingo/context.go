@@ -15,6 +15,10 @@ import (
 	"time"
 )
 
+type FunctionModule struct {
+	Name string
+}
+
 type Context struct {
 	*gin.Context
 }

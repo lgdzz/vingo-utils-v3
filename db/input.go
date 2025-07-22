@@ -57,6 +57,10 @@ type Id struct {
 	Id any `form:"id" json:"id"`
 }
 
+type Keyword struct {
+	Keyword string `form:"keyword" json:"keyword"`
+}
+
 // Location 定位坐标
 type Location struct {
 	Lat float64 `json:"lat"`
