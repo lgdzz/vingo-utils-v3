@@ -207,6 +207,14 @@ func ToMap[T any, K comparable, V any](array []T, iteratee func(T) (K, V)) map[K
 	return convertor.ToMap(array, iteratee)
 }
 
+func StringToInt(s []string) []int {
+	data := make([]int, len(s))
+	for i, v := range s {
+		data[i] = ToInt(v)
+	}
+	return data
+}
+
 // FormatBytes 将字节转换为可读文本
 func FormatBytes(size int64, precision int) string {
 	units := []string{"B", "KB", "MB", "GB", "TB", "PB"}
