@@ -86,11 +86,11 @@ type Id struct {
 }
 
 func (s Id) Int() int {
-	return vingo.ToInt(s)
+	return vingo.ToInt(s.Id)
 }
 
 func (s Id) String() string {
-	return vingo.ToString(s)
+	return vingo.ToString(s.Id)
 }
 
 type Keyword struct {
