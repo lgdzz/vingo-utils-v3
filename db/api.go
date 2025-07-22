@@ -23,7 +23,7 @@ type Api struct {
 	*Common
 	Adapter
 	Config    Config
-	ChangeLog func(operatorId int, operatorName string, tableName string, description *string)
+	ChangeLog func(tx *gorm.DB, operatorId int, operatorName string, tableName string, description *string)
 }
 
 func NewDatabase(config Config) *Api {
@@ -97,7 +97,7 @@ func RegisterBeforeUpdate(api *Api) {
 			if operatorName, ok := db.Get("operatorName"); ok {
 				name = operatorName.(string)
 			}
-			api.ChangeLog(id, name, db.Statement.Table, description)
+			api.ChangeLog(db.Session(&gorm.Session{}), id, name, db.Statement.Table, description)
 		}
 	})
 	if err != nil {
@@ -174,7 +174,7 @@ func setDiffNewValue(dest any) *string {
 			newField.Set(reflect.ValueOf(rv.Interface()))
 
 			// 调用 Compare 方法
-			if diffBox, ok := field.Interface().(*DiffBox); ok {
+			if diffBox, ok := field.Interface().(DiffBox); ok {
 				diffBox.Compare()
 				if diffBox.HasChange() {
 					return pointer.Of(diffBox.ResultContent())
