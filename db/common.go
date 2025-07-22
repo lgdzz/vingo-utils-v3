@@ -273,11 +273,31 @@ func (s *Common) QueryWhereLikeRight(db *gorm.DB, input string, column ...string
 }
 
 // QueryWherePath 查询路径数据
-func (s *Common) QueryWherePath(db *gorm.DB, input string, column string) *gorm.DB {
+func (s *Common) QueryWherePath(db *gorm.DB, input any, column string) *gorm.DB {
 	db = s.QueryDb(db)
-	if input != "" {
-		db = db.Where(fmt.Sprintf("%v='%v' OR %v LIKE '%v,%%'", column, input, column, input))
+
+	var queries []string
+	switch v := input.(type) {
+	case string:
+		if v == "" {
+			return db
+		}
+		queries = []string{v}
+	case []string:
+		if len(v) == 0 {
+			return db
+		}
+		queries = v
+	default:
+		return db
 	}
+
+	var conditions []string
+	for _, value := range queries {
+		conditions = append(conditions, fmt.Sprintf("(%v='%v' OR %v LIKE '%v,%%')", column, value, column, value))
+	}
+
+	db = db.Where(strings.Join(conditions, " OR "))
 	return db
 }
 
