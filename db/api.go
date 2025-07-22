@@ -85,7 +85,6 @@ func RegisterAfterCreate(api *Api) {
 
 func RegisterBeforeUpdate(api *Api) {
 	err := api.DB.Callback().Update().Before("gorm:before_update").Register("vingo:before_update", func(db *gorm.DB) {
-		fmt.Println("aaaaaa")
 		// 处理diff新值
 		description := setDiffNewValue(db.Statement.Dest)
 		// 变更日志
@@ -144,17 +143,12 @@ func setDiffOldValue(dest any) {
 	}
 
 	field := rv.FieldByName("Diff")
-	if !field.IsValid() || field.Kind() != reflect.Ptr || !field.CanSet() {
-		return // 不存在或不是指针字段或不可设置
+	if !field.IsValid() || field.Kind() != reflect.Struct || !field.CanSet() {
+		return // 不存在或不是结构体字段或不可设置
 	}
 
-	if field.IsNil() {
-		// 创建并赋值新的 DiffBox
-		diffBox := &DiffBox{
-			Old: rv.Interface(),
-		}
-		field.Set(reflect.ValueOf(diffBox))
-	}
+	old := field.FieldByName("Old")
+	old.Set(reflect.ValueOf(rv.Interface()))
 }
 
 // setDiffNewValue 设置Diff新值
@@ -169,13 +163,13 @@ func setDiffNewValue(dest any) *string {
 	}
 
 	field := rv.FieldByName("Diff")
-	if !field.IsValid() || field.Kind() != reflect.Ptr || !field.CanSet() {
+	if !field.IsValid() || field.Kind() != reflect.Struct || !field.CanSet() {
 		return nil // 不存在或不是指针字段或不可设置
 	}
 
-	if !field.IsNil() {
-		diffBoxValue := field.Elem()                // *DiffBox -> DiffBox
-		newField := diffBoxValue.FieldByName("New") // 访问 New 字段
+	old := field.FieldByName("Old")
+	if !old.IsNil() {
+		newField := field.FieldByName("New") // 访问 New 字段
 		if newField.IsValid() && newField.CanSet() {
 			newField.Set(reflect.ValueOf(rv.Interface()))
 

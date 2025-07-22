@@ -47,6 +47,9 @@ func (s *DiffBox) ensureCompared() {
 
 // Compare 比较 Old 和 New
 func (s *DiffBox) Compare() {
+	if s.Old == nil || s.New == nil {
+		return
+	}
 	result := map[string]DiffItem{}
 	oldVal := reflect.ValueOf(s.Old)
 	newVal := reflect.ValueOf(s.New)
@@ -131,4 +134,12 @@ func (s *DiffBox) ResultContent() string {
 
 func (s *DiffBox) HasChange() bool {
 	return len(*s.Result) > 0
+}
+
+func (s *DiffBox) With(callback func(diff *DiffBox)) {
+	if s.Old == nil || s.New == nil {
+		return
+	}
+
+	callback(s)
 }
