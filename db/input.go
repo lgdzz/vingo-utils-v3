@@ -39,6 +39,12 @@ func (s TextSlice) ToSlice() []any {
 			continue
 		}
 
+		// 3. 尝试转 bool
+		if f, err := strconv.ParseBool(part); err == nil {
+			result = append(result, f)
+			continue
+		}
+
 		// 3. 否则默认当字符串处理
 		result = append(result, part)
 	}

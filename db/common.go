@@ -101,6 +101,11 @@ func (s *Common) FastCommit(handler func(*gorm.DB)) {
 	handler(tx)
 }
 
+// OrderWithTree 树结构数据排序
+func (s *Common) OrderWithTree() string {
+	return "len asc,sort asc,id asc"
+}
+
 // Exists 查询记录是否存在
 func (s *Common) Exists(model any, condition ...any) bool {
 	err := s.DB.First(model, condition...).Error
