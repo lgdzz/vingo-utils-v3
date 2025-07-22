@@ -131,6 +131,13 @@ func RegisterAfterDelete(api *Api) {
 	}
 }
 
+func setPtrField(field reflect.Value, val interface{}) {
+	v := reflect.ValueOf(val)
+	ptr := reflect.New(v.Type())
+	ptr.Elem().Set(v)
+	field.Set(ptr)
+}
+
 // setDiffOldValue 设置Diff旧值
 func setDiffOldValue(dest any) {
 	rv := reflect.ValueOf(dest)
@@ -147,8 +154,7 @@ func setDiffOldValue(dest any) {
 		return // 不存在或不是结构体字段或不可设置
 	}
 
-	old := field.FieldByName("Old")
-	old.Set(reflect.ValueOf(rv.Interface()))
+	setPtrField(field.FieldByName("Old"), rv.Interface())
 }
 
 // setDiffNewValue 设置Diff新值
@@ -171,15 +177,14 @@ func setDiffNewValue(dest any) *string {
 	if !old.IsNil() {
 		newField := field.FieldByName("New") // 访问 New 字段
 		if newField.IsValid() && newField.CanSet() {
-			newField.Set(reflect.ValueOf(rv.Interface()))
+
+			setPtrField(newField, rv.Interface())
 
 			// 调用 Compare 方法
-			if diffBox, ok := field.Interface().(DiffBox); ok {
+			if diffBox, ok := field.Addr().Interface().(DiffBoxInterface); ok {
 				diffBox.Compare()
 				if diffBox.HasChange() {
 					return pointer.Of(diffBox.ResultContent())
-				} else {
-					return nil
 				}
 			}
 		}
