@@ -7,6 +7,7 @@
 package db
 
 import (
+	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"strconv"
 	"strings"
 )
@@ -52,9 +53,44 @@ func (s TextSlice) ToSlice() []any {
 	return result
 }
 
+// ToIntSlice 转换为int切片
+func (s TextSlice) ToIntSlice() []int {
+	result := make([]int, 0)
+	str := string(s)
+	if str == "" {
+		return result
+	}
+	parts := strings.Split(str, ",")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if i, err := strconv.ParseInt(part, 10, 64); err == nil {
+			result = append(result, int(i))
+			continue
+		}
+	}
+	return result
+}
+
+// ToStringSlice 转换为string切片
+func (s TextSlice) ToStringSlice() []string {
+	str := string(s)
+	if str == "" {
+		return []string{}
+	}
+	return strings.Split(str, ",")
+}
+
 // Id id参数
 type Id struct {
 	Id any `form:"id" json:"id"`
+}
+
+func (s Id) Int() int {
+	return vingo.ToInt(s)
+}
+
+func (s Id) String() string {
+	return vingo.ToString(s)
 }
 
 type Keyword struct {

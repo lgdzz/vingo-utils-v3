@@ -273,8 +273,8 @@ func (c *Context) GetRoleId() []int {
 	return id.([]int)
 }
 
-func (c *Context) GetRealName() string {
-	return c.GetString("realName")
+func (c *Context) GetAccName() string {
+	return c.GetString("realname")
 }
 
 func (c *Context) GetOrgName() string {
