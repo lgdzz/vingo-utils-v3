@@ -114,6 +114,22 @@ func toString[T any](v T) string {
 		return fmt.Sprintf("%v", val)
 	}
 }
+
+func (s *Strings[T]) String() string {
+	if s == nil {
+		return ""
+	}
+	strs := make([]string, len(*s))
+	for i, v := range *s {
+		strs[i] = toString(v)
+	}
+	return strings.Join(strs, ",")
+}
+
 func (s Strings[T]) Slice() []T {
 	return s
+}
+
+func (s *Strings[T]) IsEmpty() bool {
+	return s == nil || len(*s) == 0
 }
