@@ -161,7 +161,7 @@ func (s *Common) TXNotExistsErr(tx *gorm.DB, model any, condition ...any) {
 }
 
 // CheckHasChild 检查是否有子项，有则抛出异常
-func (s *Common) CheckHasChild(model any, id uint) {
+func (s *Common) CheckHasChild(model any, id int) {
 	err := s.DB.First(model, "pid=?", id)
 	if !errors.Is(err.Error, gorm.ErrRecordNotFound) {
 		panic("记录有子项，删除失败")

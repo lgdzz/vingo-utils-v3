@@ -21,7 +21,7 @@ type Hook struct {
 
 type HookOption struct {
 	Name      string
-	Port      uint
+	Port      int
 	Copyright string
 	Debug     bool
 	Database  *db.Api
