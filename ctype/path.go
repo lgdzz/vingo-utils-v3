@@ -48,7 +48,7 @@ func (s Path[T]) Slice(sep ...string) []T {
 			}
 			result = append(result, T(num))
 		case string:
-			result = append(result, T(item))
+			result = append(result, any(item).(T))
 		default:
 			panic("Path.Slice: unsupported type in PathInterface")
 		}
