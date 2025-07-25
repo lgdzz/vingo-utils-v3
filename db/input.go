@@ -80,6 +80,11 @@ func (s TextSlice) ToStringSlice() []string {
 	return strings.Split(str, ",")
 }
 
+// IsEmpty 是否为空
+func (s TextSlice) IsEmpty() bool {
+	return string(s) == ""
+}
+
 // Id id参数
 type Id struct {
 	Id any `form:"id" json:"id"`

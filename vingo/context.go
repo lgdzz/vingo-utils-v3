@@ -328,19 +328,19 @@ func (c *Context) VerifyRoleId(id ...int) bool {
 	return false
 }
 
-func (c *Context) GetDataDimension() int {
-	return c.GetInt("dataDimension")
+func (c *Context) GetDataScope() int {
+	return c.GetInt("dataScope")
 }
 
-type DataDimension struct {
+type DataScope struct {
 	MaxLevel  func()
 	OrgLevel  func()
 	DeptLevel func()
 	AccLevel  func()
 }
 
-func (s *DataDimension) Handle(c *Context) {
-	switch c.GetDataDimension() {
+func (s *DataScope) Handle(c *Context) {
+	switch c.GetDataScope() {
 	case 4: // 本单位至下属单位（最大维度）
 		if s.MaxLevel != nil {
 			s.MaxLevel()
