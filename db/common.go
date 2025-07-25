@@ -97,7 +97,7 @@ func (s *Common) AutoCommit(tx *gorm.DB, callback ...func()) {
 }
 
 // FastCommit 快捷事务
-func (s *Common) FastCommit(handler func(*gorm.DB)) {
+func (s *Common) FastCommit(handler func(tx *gorm.DB)) {
 	tx := s.DB.Begin()
 	defer s.AutoCommit(tx)
 	handler(tx)
