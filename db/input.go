@@ -7,6 +7,7 @@
 package db
 
 import (
+	"github.com/lgdzz/vingo-utils-v3/ctype"
 	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"strconv"
 	"strings"
@@ -85,20 +86,16 @@ func (s TextSlice) IsEmpty() bool {
 	return string(s) == ""
 }
 
-type IdInterface interface {
-	int | string
-}
-
 // Id id参数
-type Id[T IdInterface] struct {
-	Id T `form:"id" json:"id"`
+type Id struct {
+	Id ctype.Id `form:"id" json:"id"`
 }
 
-func (s Id[T]) Int() int {
+func (s Id) Int() int {
 	return vingo.ToInt(s.Id)
 }
 
-func (s Id[T]) String() string {
+func (s Id) String() string {
 	return vingo.ToString(s.Id)
 }
 
@@ -113,14 +110,14 @@ type Location struct {
 }
 
 // DetailInput 详细记录参数
-type DetailInput[T IdInterface] struct {
-	Id[T]
+type DetailInput struct {
+	Id
 	Fetch TextSlice `form:"fetch"`
 }
 
 // UpdateFieldInput 更新字段参数
-type UpdateFieldInput[T IdInterface] struct {
-	Id[T]
+type UpdateFieldInput struct {
+	Id
 	Key   string `json:"key"`
 	Value any    `json:"value"`
 }
