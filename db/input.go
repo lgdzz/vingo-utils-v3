@@ -85,16 +85,20 @@ func (s TextSlice) IsEmpty() bool {
 	return string(s) == ""
 }
 
-// Id id参数
-type Id struct {
-	Id any `form:"id" json:"id"`
+type IdInterface interface {
+	int | string
 }
 
-func (s Id) Int() int {
+// Id id参数
+type Id[T IdInterface] struct {
+	Id T `form:"id" json:"id"`
+}
+
+func (s Id[T]) Int() int {
 	return vingo.ToInt(s.Id)
 }
 
-func (s Id) String() string {
+func (s Id[T]) String() string {
 	return vingo.ToString(s.Id)
 }
 
@@ -109,14 +113,14 @@ type Location struct {
 }
 
 // DetailInput 详细记录参数
-type DetailInput struct {
-	Id
+type DetailInput[T IdInterface] struct {
+	Id[T]
 	Fetch TextSlice `form:"fetch"`
 }
 
 // UpdateFieldInput 更新字段参数
-type UpdateFieldInput struct {
-	Id
+type UpdateFieldInput[T IdInterface] struct {
+	Id[T]
 	Key   string `json:"key"`
 	Value any    `json:"value"`
 }
