@@ -7,7 +7,6 @@
 package db
 
 import (
-	"github.com/lgdzz/vingo-utils-v3/ctype"
 	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"strconv"
 	"strings"
@@ -88,11 +87,11 @@ func (s TextSlice) IsEmpty() bool {
 
 // Id id参数
 type Id struct {
-	Id ctype.Id `form:"id" json:"id"`
+	Id int `form:"id" json:"id"`
 }
 
 func (s Id) Int() int {
-	return vingo.ToInt(s.Id)
+	return s.Id
 }
 
 func (s Id) String() string {
