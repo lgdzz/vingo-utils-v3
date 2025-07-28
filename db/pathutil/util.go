@@ -174,7 +174,7 @@ func SetPathWithCreate[T any](model *T, parent *T, option *Option) {
 			updateMap[field] = fv.Interface()
 		}
 	}
-	option.Tx.Model(model).Select(fields).Updates(updateMap)
+	option.Tx.Model(model).Select(fields).UpdateColumns(updateMap)
 }
 
 // SetPathWithUpdate 设置路径，更新所有子级路径

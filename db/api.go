@@ -283,6 +283,9 @@ func mustFind[T any](db *gorm.DB, enableDiff bool, condition ...any) (row T) {
 	if err := query.First(&row, condition...).Error; err != nil {
 		typeName := reflect.TypeOf(row).Name()
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			//_, _ = color.New(color.FgRed).Println(db.ToSQL(func(tx *gorm.DB) *gorm.DB {
+			//	return tx.First(&row, condition...)
+			//}))
 			panic(fmt.Sprintf("Model[%s]记录不存在", typeName))
 		}
 		panic(fmt.Sprintf("Model[%s]查询失败，错误:%v", typeName, err.Error()))

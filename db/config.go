@@ -22,6 +22,7 @@ type Config struct {
 	MaxOpenConns int    `yaml:"maxOpenConns" json:"maxOpenConns"`
 	Driver       string `yaml:"driver" json:"driver"`
 	Secret       string `yaml:"secret" json:"secret"` // ciphertext类型字段key
+	Debug        bool   `yaml:"debug" json:"debug"`
 }
 
 func (s *Config) StringValue(value *string, defaultValue string) {
