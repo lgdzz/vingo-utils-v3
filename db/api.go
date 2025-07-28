@@ -231,6 +231,10 @@ func QueryList[T any](db *gorm.DB, pq PageQuery, option *QueryListOption[T]) any
 		return result
 	}
 
+	if option == nil {
+		option = &QueryListOption[T]{}
+	}
+
 	// 分页模式
 	return NewPage(QueryOption[T]{
 		Db:       db,
