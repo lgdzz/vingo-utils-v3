@@ -7,6 +7,7 @@
 package db
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/duke-git/lancet/v2/pointer"
@@ -23,7 +24,15 @@ type Api struct {
 	*Common
 	Adapter
 	Config    Config
-	ChangeLog func(tx *gorm.DB, operatorId int, operatorName string, tableName string, description *string)
+	ChangeLog func(tx *gorm.DB, option ChangeLogOption)
+}
+
+type ChangeLogOption struct {
+	OperatorId      int
+	OperatorName    string
+	TableName       string
+	Description     *string
+	PrimaryKeyValue any
 }
 
 func NewDatabase(config Config) *Api {
@@ -97,7 +106,15 @@ func RegisterBeforeUpdate(api *Api) {
 			if operatorName, ok := db.Get("operatorName"); ok {
 				name = operatorName.(string)
 			}
-			api.ChangeLog(db.Session(&gorm.Session{}), id, name, db.Statement.Table, description)
+			if description != nil {
+				api.ChangeLog(db.Session(&gorm.Session{}), ChangeLogOption{
+					OperatorId:      id,
+					OperatorName:    name,
+					TableName:       db.Statement.Table,
+					Description:     description,
+					PrimaryKeyValue: getPrimaryKeyValue(db),
+				})
+			}
 		}
 	})
 	if err != nil {
@@ -129,6 +146,21 @@ func RegisterAfterDelete(api *Api) {
 	if err != nil {
 		panic(fmt.Sprintf("插件注册失败: %v", err.Error()))
 	}
+}
+
+func getPrimaryKeyValue(tx *gorm.DB) any {
+	if tx.Statement == nil || tx.Statement.Schema == nil {
+		return nil
+	}
+
+	ctx := context.Background()
+	rv := tx.Statement.ReflectValue
+
+	for _, field := range tx.Statement.Schema.PrimaryFields {
+		val, _ := field.ValueOf(ctx, rv)
+		return val // 默认只取第一个主键字段
+	}
+	return nil
 }
 
 func setPtrField(field reflect.Value, val interface{}) {
