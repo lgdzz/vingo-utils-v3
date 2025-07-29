@@ -194,11 +194,51 @@ func ApiAddress(port int) {
 	}
 }
 
+func (c *Context) SetUserId(value int) {
+	c.Set("userId", value)
+}
+func (c *Context) SetRealname(value string) {
+	c.Set("realname", value)
+}
+func (c *Context) SetAccId(value int) {
+	c.Set("accId", value)
+}
+func (c *Context) SetAccName(value string) {
+	c.Set("accName", value)
+}
+func (c *Context) SetOrgId(value int) {
+	c.Set("orgId", value)
+}
+func (c *Context) SetOrgName(value string) {
+	c.Set("orgName", value)
+}
+func (c *Context) SetOrgTypeIds(value ctype.Strings[int]) {
+	c.Set("orgTypeIds", value)
+}
+func (c *Context) SetOrgTypeNames(value ctype.Strings[string]) {
+	c.Set("orgTypeNames", value)
+}
+func (c *Context) SetDeptIds(value ctype.Strings[int]) {
+	c.Set("deptIds", value)
+}
+func (c *Context) SetDeptNames(value ctype.Strings[string]) {
+	c.Set("deptNames", value)
+}
+func (c *Context) SetRoleIds(value ctype.Strings[int]) {
+	c.Set("roleIds", value)
+}
+func (c *Context) SetRoleNames(value ctype.Strings[string]) {
+	c.Set("roleNames", value)
+}
+func (c *Context) SetRoleTags(value ctype.Strings[string]) {
+	c.Set("roleTags", value)
+}
+
 func (c *Context) GetUserId() int {
 	return c.GetInt("userId")
 }
-func (c *Context) GetRealname() int {
-	return c.GetInt("realname")
+func (c *Context) GetRealname() string {
+	return c.GetString("realname")
 }
 func (c *Context) GetAccId() int {
 	return c.GetInt("accId")
