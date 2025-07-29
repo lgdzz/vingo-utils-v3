@@ -7,6 +7,7 @@ import (
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/lgdzz/vingo-utils-v3/ctype"
 	"net"
 	"net/url"
 	"os"
@@ -196,76 +197,77 @@ func ApiAddress(port int) {
 func (c *Context) GetUserId() int {
 	return c.GetInt("userId")
 }
-
+func (c *Context) GetRealname() int {
+	return c.GetInt("realname")
+}
 func (c *Context) GetAccId() int {
 	return c.GetInt("accId")
 }
-
+func (c *Context) GetAccName() string {
+	return c.GetString("accName")
+}
 func (c *Context) GetOrgId() int {
 	return c.GetInt("orgId")
 }
-
-func (c *Context) GetDeptId() int {
-	return c.GetInt("deptId")
-}
-
-func (c *Context) GetRoleId() []int {
-	id, exists := c.Get("roleId")
-	if !exists {
-		id = []int{}
-	}
-	return id.([]int)
-}
-
-func (c *Context) GetAccName() string {
-	return c.GetString("realname")
-}
-
 func (c *Context) GetOrgName() string {
 	return c.GetString("orgName")
 }
+func (c *Context) GetOrgTypeIds() ctype.Strings[int] {
+	return c.getInts("orgTypeIds")
+}
+func (c *Context) GetOrgTypeNames() ctype.Strings[string] {
+	return c.getTexts("orgTypeNames")
+}
+func (c *Context) GetDeptIds() ctype.Strings[int] {
+	return c.getInts("deptIds")
+}
+func (c *Context) GetDeptNames() ctype.Strings[string] {
+	return c.getTexts("deptNames")
+}
+func (c *Context) GetRoleIds() ctype.Strings[int] {
+	return c.getInts("roleIds")
+}
+func (c *Context) GetRoleNames() ctype.Strings[string] {
+	return c.getTexts("roleNames")
+}
+func (c *Context) GetRoleTags() ctype.Strings[string] {
+	return c.getTexts("roleTags")
+}
 
-func (c *Context) getTexts(key string) []string {
-	v, exists := c.Get(key)
-	if !exists {
-		v = []string{}
+func (c *Context) getTexts(key string) ctype.Strings[string] {
+	value, exists := c.Get(key)
+	if exists {
+		return value.(ctype.Strings[string])
 	}
-	return v.([]string)
+	return ctype.Strings[string]{}
+}
+func (c *Context) getInts(key string) ctype.Strings[int] {
+	value, exists := c.Get(key)
+	if exists {
+		return value.(ctype.Strings[int])
+	}
+	return ctype.Strings[int]{}
 }
 
-func (c *Context) GetRoleName() []string {
-	return c.getTexts("roleName")
-}
-
-func (c *Context) GetOrgTag() []string {
-	return c.getTexts("orgTag")
-}
-
-func (c *Context) GetRoleTag() []string {
-	return c.getTexts("roleTag")
-}
-
-func (c *Context) VerifyRoleTag(tag ...string) bool {
-	for _, t := range tag {
-		if slice.Contain(c.GetRoleTag(), t) {
+func (c *Context) VerifyRoleTags(tags ...string) bool {
+	for _, t := range tags {
+		if slice.Contain(c.GetRoleTags(), t) {
 			return true
 		}
 	}
 	return false
 }
-
-func (c *Context) VerifyOrgTag(tag ...string) bool {
-	for _, t := range tag {
-		if slice.Contain(c.GetOrgTag(), t) {
+func (c *Context) VerifyOrgTypes(types ...int) bool {
+	for _, t := range types {
+		if slice.Contain(c.GetOrgTypeIds(), t) {
 			return true
 		}
 	}
 	return false
 }
-
-func (c *Context) VerifyRoleId(id ...int) bool {
+func (c *Context) VerifyRoleIds(id ...int) bool {
 	for _, i := range id {
-		if slice.Contain(c.GetRoleId(), i) {
+		if slice.Contain(c.GetRoleIds(), i) {
 			return true
 		}
 	}
