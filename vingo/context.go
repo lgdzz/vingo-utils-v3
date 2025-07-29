@@ -233,6 +233,9 @@ func (c *Context) SetRoleNames(value ctype.Strings[string]) {
 func (c *Context) SetRoleTags(value ctype.Strings[string]) {
 	c.Set("roleTags", value)
 }
+func (c *Context) SetDataScope(value int) {
+	c.Set("dataScope", value)
+}
 
 func (c *Context) GetUserId() int {
 	return c.GetInt("userId")
@@ -273,6 +276,9 @@ func (c *Context) GetRoleNames() ctype.Strings[string] {
 func (c *Context) GetRoleTags() ctype.Strings[string] {
 	return c.getTexts("roleTags")
 }
+func (c *Context) GetDataScope() int {
+	return c.GetInt("dataScope")
+}
 
 func (c *Context) getTexts(key string) ctype.Strings[string] {
 	value, exists := c.Get(key)
@@ -312,10 +318,6 @@ func (c *Context) VerifyRoleIds(id ...int) bool {
 		}
 	}
 	return false
-}
-
-func (c *Context) GetDataScope() int {
-	return c.GetInt("dataScope")
 }
 
 type DataScope struct {
