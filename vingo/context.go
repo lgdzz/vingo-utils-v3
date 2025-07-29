@@ -7,7 +7,6 @@ import (
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/lgdzz/vingo-utils-v3/ctype"
 	"net"
 	"net/url"
 	"os"
@@ -212,25 +211,25 @@ func (c *Context) SetOrgId(value int) {
 func (c *Context) SetOrgName(value string) {
 	c.Set("orgName", value)
 }
-func (c *Context) SetOrgTypeIds(value ctype.Strings[int]) {
+func (c *Context) SetOrgTypeIds(value []int) {
 	c.Set("orgTypeIds", value)
 }
-func (c *Context) SetOrgTypeNames(value ctype.Strings[string]) {
+func (c *Context) SetOrgTypeNames(value []string) {
 	c.Set("orgTypeNames", value)
 }
-func (c *Context) SetDeptIds(value ctype.Strings[int]) {
+func (c *Context) SetDeptIds(value []int) {
 	c.Set("deptIds", value)
 }
-func (c *Context) SetDeptNames(value ctype.Strings[string]) {
+func (c *Context) SetDeptNames(value []string) {
 	c.Set("deptNames", value)
 }
-func (c *Context) SetRoleIds(value ctype.Strings[int]) {
+func (c *Context) SetRoleIds(value []int) {
 	c.Set("roleIds", value)
 }
-func (c *Context) SetRoleNames(value ctype.Strings[string]) {
+func (c *Context) SetRoleNames(value []string) {
 	c.Set("roleNames", value)
 }
-func (c *Context) SetRoleTags(value ctype.Strings[string]) {
+func (c *Context) SetRoleTags(value []string) {
 	c.Set("roleTags", value)
 }
 func (c *Context) SetDataScope(value int) {
@@ -255,44 +254,44 @@ func (c *Context) GetOrgId() int {
 func (c *Context) GetOrgName() string {
 	return c.GetString("orgName")
 }
-func (c *Context) GetOrgTypeIds() ctype.Strings[int] {
+func (c *Context) GetOrgTypeIds() []int {
 	return c.getInts("orgTypeIds")
 }
-func (c *Context) GetOrgTypeNames() ctype.Strings[string] {
+func (c *Context) GetOrgTypeNames() []string {
 	return c.getTexts("orgTypeNames")
 }
-func (c *Context) GetDeptIds() ctype.Strings[int] {
+func (c *Context) GetDeptIds() []int {
 	return c.getInts("deptIds")
 }
-func (c *Context) GetDeptNames() ctype.Strings[string] {
+func (c *Context) GetDeptNames() []string {
 	return c.getTexts("deptNames")
 }
-func (c *Context) GetRoleIds() ctype.Strings[int] {
+func (c *Context) GetRoleIds() []int {
 	return c.getInts("roleIds")
 }
-func (c *Context) GetRoleNames() ctype.Strings[string] {
+func (c *Context) GetRoleNames() []string {
 	return c.getTexts("roleNames")
 }
-func (c *Context) GetRoleTags() ctype.Strings[string] {
+func (c *Context) GetRoleTags() []string {
 	return c.getTexts("roleTags")
 }
 func (c *Context) GetDataScope() int {
 	return c.GetInt("dataScope")
 }
 
-func (c *Context) getTexts(key string) ctype.Strings[string] {
+func (c *Context) getTexts(key string) []string {
 	value, exists := c.Get(key)
 	if exists {
-		return value.(ctype.Strings[string])
+		return value.([]string)
 	}
-	return ctype.Strings[string]{}
+	return []string{}
 }
-func (c *Context) getInts(key string) ctype.Strings[int] {
+func (c *Context) getInts(key string) []int {
 	value, exists := c.Get(key)
 	if exists {
-		return value.(ctype.Strings[int])
+		return value.([]int)
 	}
-	return ctype.Strings[int]{}
+	return []int{}
 }
 
 func (c *Context) VerifyRoleTags(tags ...string) bool {
