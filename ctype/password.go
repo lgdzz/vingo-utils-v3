@@ -100,11 +100,12 @@ func (s Password) Match(raw string) bool {
 
 // IsExpired 检查是否过期
 func (s Password) IsExpired(day int) bool {
-	t := s.CreatedAt()
-	if t == nil {
+	o := s.getObj()
+	if o.CreatedAt == nil && !o.IsTemp {
 		return false
 	}
-	return time.Since(t.Time()) > time.Duration(day)*24*time.Hour
+	// 临时密码 或 超过有效期
+	return o.IsTemp || time.Since(o.CreatedAt.Time()) > time.Duration(day)*24*time.Hour
 }
 
 func mustMarshalPassword(obj *PasswordObj) Password {
