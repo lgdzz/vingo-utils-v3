@@ -33,6 +33,7 @@ type PasswordObj struct {
 	PasswordMd5 string            `json:"passwordMd5"`
 	Salt        string            `json:"salt"`
 	CreatedAt   *moment.LocalTime `json:"createdAt,omitempty"`
+	IsTemp      bool              `json:"isTemp"`
 }
 
 // ========== GORM 接口 ==========
@@ -50,7 +51,7 @@ func (s Password) String() string {
 }
 
 // NewPassword 生成密码（加密 + salt + 时间）
-func NewPassword(raw string, level int) Password {
+func NewPassword(raw string, level int, isTemp bool) Password {
 	checkPasswordLevel(raw, level)
 	salt := random.RandString(6)
 	md5 := cryptor.Md5(cryptor.Md5(raw) + salt)
@@ -58,6 +59,7 @@ func NewPassword(raw string, level int) Password {
 		PasswordMd5: md5,
 		Salt:        salt,
 		CreatedAt:   moment.NowLocalTime(),
+		IsTemp:      isTemp,
 	}
 	return mustMarshalPassword(obj)
 }
@@ -84,22 +86,16 @@ func checkPasswordLevel(raw string, level int) {
 	}
 }
 
-// split 拆分为明文加密串、salt 和时间（加密部分）
-func (s Password) split() (password string, salt string, createdAt *moment.LocalTime) {
-	obj := s.getObj()
-	return obj.PasswordMd5, obj.Salt, obj.CreatedAt
-}
-
 // CreatedAt 获取密码创建时间
 func (s Password) CreatedAt() *moment.LocalTime {
-	_, _, t := s.split()
-	return t
+	o := s.getObj()
+	return o.CreatedAt
 }
 
 // Match 判断密码是否等于指定原始密码
 func (s Password) Match(raw string) bool {
-	password, salt, _ := s.split()
-	return password == cryptor.Md5(cryptor.Md5(raw)+salt)
+	o := s.getObj()
+	return o.PasswordMd5 == cryptor.Md5(cryptor.Md5(raw)+o.Salt)
 }
 
 // IsExpired 检查是否过期
