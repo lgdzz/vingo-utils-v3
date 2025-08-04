@@ -28,8 +28,7 @@ type Api struct {
 }
 
 type ChangeLogOption struct {
-	OperatorId      int
-	OperatorName    string
+	Ctx             *vingo.Context
 	TableName       string
 	Description     *string
 	PrimaryKeyValue any
@@ -98,18 +97,13 @@ func RegisterBeforeUpdate(api *Api) {
 		description := setDiffNewValue(db.Statement.Dest)
 		// 变更日志
 		if api.ChangeLog != nil {
-			var id int
-			var name string
-			if operatorId, ok := db.Get("operatorId"); ok {
-				id = operatorId.(int)
-			}
-			if operatorName, ok := db.Get("operatorName"); ok {
-				name = operatorName.(string)
+			var ctx *vingo.Context
+			if c, ok := db.Get("ctx"); ok {
+				ctx = c.(*vingo.Context)
 			}
 			if description != nil {
 				api.ChangeLog(db.Session(&gorm.Session{}), ChangeLogOption{
-					OperatorId:      id,
-					OperatorName:    name,
+					Ctx:             ctx,
 					TableName:       db.Statement.Table,
 					Description:     description,
 					PrimaryKeyValue: getPrimaryKeyValue(db),

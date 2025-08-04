@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lgdzz/vingo-utils-v3/moment"
+	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"gorm.io/gorm"
 	"reflect"
 	"strings"
@@ -62,13 +63,13 @@ func (s *Common) Diff() *gorm.DB {
 }
 
 // Operator diff操作人
-func (s *Common) Operator(id int, name string) *gorm.DB {
-	return s.DB.Set("operatorId", id).Set("operatorName", name)
+func (s *Common) Operator(ctx *vingo.Context) *gorm.DB {
+	return s.DB.Set("ctx", ctx)
 }
 
 // OperatorWithTx diff操作人
-func (s *Common) OperatorWithTx(tx *gorm.DB, id int, name string) *gorm.DB {
-	return tx.Set("operatorId", id).Set("operatorName", name)
+func (s *Common) OperatorWithTx(tx *gorm.DB, ctx *vingo.Context) *gorm.DB {
+	return tx.Set("ctx", ctx)
 }
 
 // AutoCommit 自动提交事务

@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"github.com/duke-git/lancet/v2/slice"
+	"gorm.io/gorm"
 	"reflect"
 	"strings"
 )
@@ -302,4 +303,28 @@ func (s *DiffBox[T]) With(callback func(diff *DiffBox[T])) {
 	}
 
 	callback(s)
+}
+
+func (s *DiffBox[T]) DiffLog(tx *gorm.DB, result any) {
+	var data T
+	ptrValue := reflect.ValueOf(&data)
+	method := ptrValue.MethodByName("TableName")
+
+	if !method.IsValid() {
+		fmt.Println("未找到 TableName 方法")
+		return
+	}
+
+	if method.Type().NumIn() != 0 {
+		fmt.Println("TableName 方法不能带参数")
+		return
+	}
+
+	out := method.Call(nil)
+	if len(out) > 0 {
+		tableName := out[0].Interface()
+		pk := reflect.ValueOf(s.Old).Elem().FieldByName("Id").Interface()
+		tx.Where("target=? AND `pk`=?", tableName, pk).Order("id desc").Find(result)
+	}
+
 }
