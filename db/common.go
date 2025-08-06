@@ -258,7 +258,6 @@ func (s *Common) QueryWhereLike(db *gorm.DB, input TextSlice, column ...string) 
 				text = append(text, fmt.Sprintf("%v LIKE '%v'", item, value))
 			}
 		}
-		fmt.Println(strings.Join(text, " OR "))
 		db = db.Where(strings.Join(text, " OR "))
 	}
 	return db
