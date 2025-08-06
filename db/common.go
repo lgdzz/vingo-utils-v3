@@ -255,9 +255,10 @@ func (s *Common) QueryWhereLike(db *gorm.DB, input TextSlice, column ...string) 
 		for _, value := range input.ToStringSlice() {
 			value = fmt.Sprintf("%%%v%%", strings.TrimSpace(value))
 			for _, item := range column {
-				text = append(text, fmt.Sprintf("%v LIKE %v", item, value))
+				text = append(text, fmt.Sprintf("%v LIKE '%v'", item, value))
 			}
 		}
+		fmt.Println(strings.Join(text, " OR "))
 		db = db.Where(strings.Join(text, " OR "))
 	}
 	return db
@@ -271,7 +272,7 @@ func (s *Common) QueryWhereLikeRight(db *gorm.DB, input TextSlice, column ...str
 		for _, value := range input.ToStringSlice() {
 			value = fmt.Sprintf("%v%%", strings.TrimSpace(value))
 			for _, item := range column {
-				text = append(text, fmt.Sprintf("%v LIKE %v", item, value))
+				text = append(text, fmt.Sprintf("%v LIKE '%v'", item, value))
 			}
 		}
 		db = db.Where(strings.Join(text, " OR "))
