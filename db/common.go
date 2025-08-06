@@ -178,7 +178,7 @@ func (s *Common) QueryDb(db *gorm.DB) *gorm.DB {
 }
 
 // QueryWhere 条件查询
-func (s *Common) QueryWhere(db *gorm.DB, input any, column string) *gorm.DB {
+func (s *Common) QueryWhere(db *gorm.DB, input any, column ...string) *gorm.DB {
 	db = s.QueryDb(db)
 	valueOf := reflect.ValueOf(input)
 	typeOf := valueOf.Type()
@@ -200,7 +200,11 @@ func (s *Common) QueryWhere(db *gorm.DB, input any, column string) *gorm.DB {
 		input = valueOf.Interface()
 	}
 	if input != nil {
-		db = db.Where(fmt.Sprintf("%v=?", column), input)
+		var text []string
+		for _, item := range column {
+			text = append(text, fmt.Sprintf("%v=@text", item))
+		}
+		db = db.Where(strings.Join(text, " OR "), sql.Named("text", input))
 	}
 	return db
 }
@@ -244,31 +248,33 @@ func (s *Common) QueryWhereDate(db *gorm.DB, input moment.DateTextRange, column 
 }
 
 // QueryWhereLike 模糊查询
-func (s *Common) QueryWhereLike(db *gorm.DB, input string, column ...string) *gorm.DB {
+func (s *Common) QueryWhereLike(db *gorm.DB, input TextSlice, column ...string) *gorm.DB {
 	db = s.QueryDb(db)
-	if input != "" {
+	if !input.IsEmpty() {
 		var text []string
-		for _, item := range column {
-			text = append(text, fmt.Sprintf("%v LIKE @text", item))
+		for _, value := range input.ToStringSlice() {
+			value = fmt.Sprintf("%%%v%%", strings.TrimSpace(value))
+			for _, item := range column {
+				text = append(text, fmt.Sprintf("%v LIKE %v", item, value))
+			}
 		}
-		var value string
-		value = fmt.Sprintf("%%%v%%", strings.TrimSpace(input))
-		db = db.Where(strings.Join(text, " OR "), sql.Named("text", value))
+		db = db.Where(strings.Join(text, " OR "))
 	}
 	return db
 }
 
 // QueryWhereLikeRight 右模糊查询
-func (s *Common) QueryWhereLikeRight(db *gorm.DB, input string, column ...string) *gorm.DB {
+func (s *Common) QueryWhereLikeRight(db *gorm.DB, input TextSlice, column ...string) *gorm.DB {
 	db = s.QueryDb(db)
-	if input != "" {
+	if !input.IsEmpty() {
 		var text []string
-		for _, item := range column {
-			text = append(text, fmt.Sprintf("%v LIKE @text", item))
+		for _, value := range input.ToStringSlice() {
+			value = fmt.Sprintf("%v%%", strings.TrimSpace(value))
+			for _, item := range column {
+				text = append(text, fmt.Sprintf("%v LIKE %v", item, value))
+			}
 		}
-		var value string
-		value = fmt.Sprintf("%v%%", strings.TrimSpace(input))
-		db = db.Where(strings.Join(text, " OR "), sql.Named("text", value))
+		db = db.Where(strings.Join(text, " OR "))
 	}
 	return db
 }
