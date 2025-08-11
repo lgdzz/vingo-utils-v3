@@ -229,6 +229,7 @@ func FormatBytes(size int64, precision int) string {
 	return fmt.Sprintf(format, fsize, units[i])
 }
 
+// Pinyin 拼音
 func Pinyin(text string) string {
 	a := pinyin.NewArgs()
 	a.Style = pinyin.Normal // 不带声调，也可以用 pinyin.Tone 等其他风格
