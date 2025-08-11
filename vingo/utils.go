@@ -12,6 +12,7 @@ import (
 	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/formatter"
 	"github.com/google/uuid"
+	"github.com/mozillazg/go-pinyin"
 	"math/big"
 	"math/rand"
 	"os"
@@ -226,4 +227,16 @@ func FormatBytes(size int64, precision int) string {
 	}
 	format := fmt.Sprintf("%%.%df %%s", precision)
 	return fmt.Sprintf(format, fsize, units[i])
+}
+
+// PinyinInitial 拼音首字母
+func PinyinInitial(text string) string {
+	a := pinyin.NewArgs()
+	a.Style = pinyin.FirstLetter
+	result := pinyin.Pinyin(text, a)
+	var initials string
+	for _, item := range result {
+		initials += item[0]
+	}
+	return initials
 }

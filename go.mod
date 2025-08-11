@@ -54,6 +54,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mojocn/base64Captcha v1.3.8 // indirect
+	github.com/mozillazg/go-pinyin v0.21.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/qiniu/go-sdk/v7 v7.25.4 // indirect
