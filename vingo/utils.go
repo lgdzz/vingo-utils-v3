@@ -229,6 +229,22 @@ func FormatBytes(size int64, precision int) string {
 	return fmt.Sprintf(format, fsize, units[i])
 }
 
+func Pinyin(text string) string {
+	a := pinyin.NewArgs()
+	a.Style = pinyin.Normal // 不带声调，也可以用 pinyin.Tone 等其他风格
+
+	py := pinyin.Pinyin(text, a)
+
+	// 拼接成字符串，空格分隔
+	result := ""
+	for _, syllables := range py {
+		if len(syllables) > 0 {
+			result += syllables[0] + "_"
+		}
+	}
+	return result
+}
+
 // PinyinInitial 拼音首字母
 func PinyinInitial(text string) string {
 	a := pinyin.NewArgs()
