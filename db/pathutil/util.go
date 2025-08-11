@@ -15,6 +15,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 // JoinField 自动拼接字段配置
@@ -93,6 +94,15 @@ func upperFirst(s string) string {
 	return strings.ToUpper(s[:1]) + s[1:]
 }
 
+func lowerFirst(s string) string {
+	if s == "" {
+		return s
+	}
+	runes := []rune(s)
+	runes[0] = unicode.ToLower(runes[0])
+	return string(runes)
+}
+
 func setPathOfChild[T any](model *T, option *Option) {
 	s := reflect.ValueOf(model).Elem()
 
@@ -159,11 +169,11 @@ func SetPathWithCreate[T any](model *T, parent *T, option *Option) {
 
 	// 构建更新字段列表
 	fields := []string{
-		strings.ToLower(option.FieldPath),
-		strings.ToLower(option.FieldLen),
+		lowerFirst(option.FieldPath),
+		lowerFirst(option.FieldLen),
 	}
 	for _, jf := range option.JoinFields {
-		fields = append(fields, strings.ToLower(jf.Target))
+		fields = append(fields, lowerFirst(jf.Target))
 	}
 
 	// 构造更新字段 map
