@@ -237,13 +237,13 @@ func Pinyin(text string) string {
 	py := pinyin.Pinyin(text, a)
 
 	// 拼接成字符串，_分隔
-	result := ""
+	arr := make([]string, 0)
 	for _, syllables := range py {
 		if len(syllables) > 0 {
-			result += syllables[0] + "_"
+			arr = append(arr, syllables[0])
 		}
 	}
-	return result
+	return strings.Join(arr, "_")
 }
 
 // PinyinInitial 拼音首字母
