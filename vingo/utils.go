@@ -236,7 +236,7 @@ func Pinyin(text string) string {
 
 	py := pinyin.Pinyin(text, a)
 
-	// 拼接成字符串，空格分隔
+	// 拼接成字符串，_分隔
 	result := ""
 	for _, syllables := range py {
 		if len(syllables) > 0 {
