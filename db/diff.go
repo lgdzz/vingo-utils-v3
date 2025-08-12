@@ -31,8 +31,8 @@ type DiffItem struct {
 }
 
 type ChangeItems struct {
-	Old map[string]any
-	New map[string]any
+	Old map[string]any `json:"old"`
+	New map[string]any `json:"new"`
 }
 
 func (s ChangeItems) String() string {
