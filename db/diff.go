@@ -36,12 +36,11 @@ type ChangeItems struct {
 }
 
 func (s ChangeItems) String() string {
-	b, err := json.Marshal(s)
-	if err == nil {
-		log.Println(err)
-		return ""
+	output, err := json.Marshal(s)
+	if err != nil {
+		log.Println(err.Error())
 	}
-	return string(b)
+	return string(output)
 }
 
 func (s *DiffItem) toJSONStr(v any) string {
