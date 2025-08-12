@@ -235,7 +235,7 @@ func QueryList[T any](db *gorm.DB, pq PageQuery, option *QueryListOption[T]) any
 			db = db.Limit(pq.Limit.Size)
 		}
 		if pq.OrderRaw != nil {
-			db = db.Order(pq.OrderRaw)
+			db = db.Order(*pq.OrderRaw)
 		}
 		db.Scan(&result)
 		if option != nil {
