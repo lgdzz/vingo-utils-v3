@@ -210,7 +210,11 @@ func setDiffNewValue(dest any) *string {
 			if diffBox, ok := field.Addr().Interface().(DiffBoxInterface); ok {
 				diffBox.Compare()
 				if diffBox.HasChange() {
-					return pointer.Of(diffBox.ResultContent())
+					j := diffBox.ResultJson()
+					if j == nil {
+						return nil
+					}
+					return pointer.Of(j.String())
 				}
 			}
 		}

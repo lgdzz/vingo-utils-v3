@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/duke-git/lancet/v2/slice"
 	"gorm.io/gorm"
+	"log"
 	"reflect"
 	"strings"
 )
@@ -13,6 +14,7 @@ type DiffBoxInterface interface {
 	Compare()
 	HasChange() bool
 	ResultContent() string
+	ResultJson() *ChangeItems
 }
 
 type DiffBox[T any] struct {
@@ -26,6 +28,20 @@ type DiffItem struct {
 	OldValue any
 	NewValue any
 	Message  string
+}
+
+type ChangeItems struct {
+	Old map[string]any
+	New map[string]any
+}
+
+func (s ChangeItems) String() string {
+	b, err := json.Marshal(s)
+	if err == nil {
+		log.Println(err)
+		return ""
+	}
+	return string(b)
 }
 
 func (s *DiffItem) toJSONStr(v any) string {
@@ -174,6 +190,19 @@ func (s *DiffBox[T]) ResultContent() string {
 		builder.WriteString(item.Message)
 	}
 	return builder.String()
+}
+
+func (s *DiffBox[T]) ResultJson() *ChangeItems {
+	s.ensureCompared()
+	if !s.HasChange() {
+		return nil
+	}
+	var result = ChangeItems{Old: map[string]any{}, New: map[string]any{}}
+	for _, item := range *s.Result {
+		result.Old[item.Column] = item.OldValue
+		result.New[item.Column] = item.NewValue
+	}
+	return &result
 }
 
 func (s *DiffBox[T]) HasChange() bool {
