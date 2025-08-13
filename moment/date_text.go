@@ -38,5 +38,5 @@ func (s DateText) ToTime() time.Time {
 
 // ToLocalTime 日期字符串转 LocalTime
 func (s DateText) ToLocalTime() *LocalTime {
-	return ToLocalTime(s)
+	return ToLocalTime(s.ToString())
 }
