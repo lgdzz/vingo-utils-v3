@@ -234,7 +234,7 @@ type QueryListOption[T any] struct {
 func QueryList[T any](db *gorm.DB, pq PageQuery, option *QueryListOption[T]) any {
 	// 不分页模式
 	if pq.Limit.Page == nil {
-		var result []T
+		var result = make([]T, 0)
 		if pq.Limit.Size > 0 {
 			db = db.Limit(pq.Limit.Size)
 		}
