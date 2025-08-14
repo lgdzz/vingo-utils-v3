@@ -205,6 +205,9 @@ func (c *Context) SetAccId(value int) {
 func (c *Context) SetAccName(value string) {
 	c.Set("accName", value)
 }
+func (c *Context) SetOrgPid(value int) {
+	c.Set("orgPid", value)
+}
 func (c *Context) SetOrgId(value int) {
 	c.Set("orgId", value)
 }
@@ -247,6 +250,9 @@ func (c *Context) GetAccId() int {
 }
 func (c *Context) GetAccName() string {
 	return c.GetString("accName")
+}
+func (c *Context) GetOrgPid() int {
+	return c.GetInt("orgPid")
 }
 func (c *Context) GetOrgId() int {
 	return c.GetInt("orgId")
