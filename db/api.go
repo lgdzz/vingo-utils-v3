@@ -244,9 +244,13 @@ func QueryList[T any](db *gorm.DB, pq PageQuery, option *QueryListOption[T]) any
 		db.Scan(&result)
 		if option != nil {
 			if option.Iteratee != nil {
-				return slice.Map(result, func(index int, item T) any {
+				data := slice.Map(result, func(index int, item T) any {
 					return option.Iteratee(index, item)
 				})
+				if option.IsTree {
+					return vingo.FastTree[float64](data)
+				}
+				return data
 			}
 
 			if option.IsTree {
