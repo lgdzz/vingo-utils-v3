@@ -95,3 +95,12 @@ func (s Path[T]) Last(sep ...string) (T, bool) {
 	}
 	return items[len(items)-1], true
 }
+
+// Parents 获取除最后一个元素的所有元素
+func (s Path[T]) Parents(sep ...string) ([]T, bool) {
+	items := s.Slice(sep...)
+	if len(items) <= 1 {
+		return nil, false
+	}
+	return items[:len(items)-1], true
+}
