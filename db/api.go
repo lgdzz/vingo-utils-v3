@@ -97,9 +97,13 @@ func RegisterBeforeUpdate(api *Api) {
 		description := setDiffNewValue(db.Statement.Dest)
 		// 变更日志
 		if api.ChangeLog != nil {
+			var ctx any
+			if c, ok := db.Get("ctx"); ok {
+				ctx = c
+			}
 			if description != nil {
 				api.ChangeLog(db.Session(&gorm.Session{}), ChangeLogOption{
-					Ctx:             db.Get("ctx"),
+					Ctx:             ctx,
 					TableName:       db.Statement.Table,
 					Description:     description,
 					PrimaryKeyValue: getPrimaryKeyValue(db),
