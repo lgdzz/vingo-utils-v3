@@ -28,7 +28,7 @@ type Api struct {
 }
 
 type ChangeLogOption struct {
-	Ctx             *vingo.Context
+	Ctx             any
 	TableName       string
 	Description     *string
 	PrimaryKeyValue any
@@ -97,13 +97,9 @@ func RegisterBeforeUpdate(api *Api) {
 		description := setDiffNewValue(db.Statement.Dest)
 		// 变更日志
 		if api.ChangeLog != nil {
-			var ctx *vingo.Context
-			if c, ok := db.Get("ctx"); ok {
-				ctx = c.(*vingo.Context)
-			}
 			if description != nil {
 				api.ChangeLog(db.Session(&gorm.Session{}), ChangeLogOption{
-					Ctx:             ctx,
+					Ctx:             db.Get("ctx"),
 					TableName:       db.Statement.Table,
 					Description:     description,
 					PrimaryKeyValue: getPrimaryKeyValue(db),
