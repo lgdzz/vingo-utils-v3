@@ -18,7 +18,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lgdzz/vingo-utils-v3/moment"
-	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"gorm.io/gorm"
 	"reflect"
 	"strings"
@@ -63,12 +62,12 @@ func (s *Common) Diff() *gorm.DB {
 }
 
 // Operator diff操作人
-func (s *Common) Operator(ctx *vingo.Context) *gorm.DB {
+func (s *Common) Operator(ctx any) *gorm.DB {
 	return s.DB.Set("ctx", ctx)
 }
 
 // OperatorWithTx diff操作人
-func (s *Common) OperatorWithTx(tx *gorm.DB, ctx *vingo.Context) *gorm.DB {
+func (s *Common) OperatorWithTx(tx *gorm.DB, ctx any) *gorm.DB {
 	return tx.Set("ctx", ctx)
 }
 
