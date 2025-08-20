@@ -15,9 +15,13 @@ import (
 type Jsons[T any] []T
 
 func (s Jsons[T]) Value() (driver.Value, error) {
+	if s == nil {
+		// nil 时返回空数组 JSON
+		return []byte("[]"), nil
+	}
 	bytes, err := json.Marshal(s)
 	if err != nil {
-		panic(fmt.Sprintf("Jsons.Value marshal error: %v", err))
+		return nil, fmt.Errorf("Jsons.Value marshal error: %w", err)
 	}
 	return bytes, nil
 }
@@ -47,8 +51,12 @@ func (s Jsons[T]) MarshalJSON() ([]byte, error) {
 }
 
 func (s *Jsons[T]) UnmarshalJSON(b []byte) error {
+	if string(b) == "null" {
+		*s = make(Jsons[T], 0)
+		return nil
+	}
 	if err := json.Unmarshal(b, (*[]T)(s)); err != nil {
-		panic(fmt.Sprintf("Jsons.UnmarshalJSON error: %v", err))
+		return fmt.Errorf("Jsons.UnmarshalJSON error: %w", err)
 	}
 	return nil
 }
