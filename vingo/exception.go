@@ -3,28 +3,9 @@ package vingo
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/lgdzz/vingo-utils-exception/exception"
 	"runtime/debug"
 )
-
-// AuthException 身份验证异常
-type AuthException struct {
-	Message string
-}
-
-// DbException 数据库事务异常
-type DbException struct {
-	Message string
-}
-
-// ConfirmException 需要点击确认的异常
-type ConfirmException struct {
-	Message string
-}
-
-// BackException 页面后退异常
-type BackException struct {
-	Message string
-}
 
 // ExceptionHandler 异常处理
 func ExceptionHandler(c *gin.Context) {
@@ -38,13 +19,13 @@ func ExceptionHandler(c *gin.Context) {
 			switch t := err.(type) {
 			case string:
 				context.Response(&ResponseData{Message: t, Status: 200, Error: 1, ErrorType: "业务错误"})
-			case *DbException:
+			case *exception.DbException:
 				context.Response(&ResponseData{Message: t.Message, Status: 200, Error: 1, ErrorType: "数据库错误"})
-			case *ConfirmException:
+			case *exception.ConfirmException:
 				context.Response(&ResponseData{Message: t.Message, Status: 200, Error: 2, ErrorType: "业务错误"})
-			case *BackException:
+			case *exception.BackException:
 				context.Response(&ResponseData{Message: t.Message, Status: 200, Error: 3, ErrorType: "业务错误"})
-			case *AuthException:
+			case *exception.AuthException:
 				context.Response(&ResponseData{Message: t.Message, Status: 401, Error: 1})
 			default:
 				context.Response(&ResponseData{Message: t.(error).Error(), Status: 200, Error: 1, ErrorType: "异常错误"})

@@ -13,6 +13,7 @@ import (
 	"github.com/duke-git/lancet/v2/pointer"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/fatih/color"
+	"github.com/lgdzz/vingo-utils-exception/exception"
 	"github.com/lgdzz/vingo-utils-v3/ctype"
 	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"gorm.io/gorm"
@@ -65,7 +66,7 @@ func RegisterAfterQuery(api *Api) {
 	err := api.DB.Callback().Query().After("gorm:query").Register("vingo:after_query", func(db *gorm.DB) {
 		if db.Error != nil && !errors.Is(db.Error, gorm.ErrRecordNotFound) {
 			_, _ = color.New(color.FgRed).Printf("[DB ERROR] %T: %v\n", db.Error, db.Error)
-			panic(&vingo.DbException{Message: db.Error.Error()})
+			panic(&exception.DbException{Message: db.Error.Error()})
 		}
 
 		// 如果开启diff
@@ -83,7 +84,7 @@ func RegisterAfterCreate(api *Api) {
 	err := api.DB.Callback().Create().After("gorm:create").Register("vingo:after_create", func(db *gorm.DB) {
 		if db.Error != nil {
 			_, _ = color.New(color.FgRed).Printf("[DB ERROR] %T: %v\n", db.Error, db.Error)
-			panic(&vingo.DbException{Message: db.Error.Error()})
+			panic(&exception.DbException{Message: db.Error.Error()})
 		}
 	})
 	if err != nil {
@@ -121,7 +122,7 @@ func RegisterAfterUpdate(api *Api) {
 	err := api.DB.Callback().Update().After("gorm:update").Register("vingo:after_update", func(db *gorm.DB) {
 		if db.Error != nil {
 			_, _ = color.New(color.FgRed).Printf("[DB ERROR] %T: %v\n", db.Error, db.Error)
-			panic(&vingo.DbException{Message: db.Error.Error()})
+			panic(&exception.DbException{Message: db.Error.Error()})
 		}
 	})
 	if err != nil {
@@ -134,7 +135,7 @@ func RegisterAfterDelete(api *Api) {
 	err := api.DB.Callback().Delete().After("gorm:delete").Register("vingo:after_delete", func(db *gorm.DB) {
 		if db.Error != nil {
 			_, _ = color.New(color.FgRed).Printf("[DB ERROR] %T: %v\n", db.Error, db.Error)
-			panic(&vingo.DbException{Message: db.Error.Error()})
+			panic(&exception.DbException{Message: db.Error.Error()})
 		}
 	})
 	if err != nil {

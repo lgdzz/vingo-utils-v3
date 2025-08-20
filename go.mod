@@ -1,6 +1,6 @@
 module github.com/lgdzz/vingo-utils-v3
 
-go 1.23.10
+go 1.24.3
 
 require (
 	github.com/duke-git/lancet/v2 v2.3.6
@@ -46,6 +46,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
+	github.com/lgdzz/vingo-utils-exception v1.0.3 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/minio/crc64nvme v1.1.0 // indirect

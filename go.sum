@@ -109,6 +109,10 @@ github.com/leodido/go-urn v1.2.0/go.mod h1:+8+nEpDfqqsY+g338gtMEUOtuK+4dEMhiQEgx
 github.com/leodido/go-urn v1.2.1/go.mod h1:zt4jvISO2HfUBqxjfIshjdMTYS56ZS/qv49ictyFfxY=
 github.com/leodido/go-urn v1.4.0 h1:WT9HwE9SGECu3lg4d/dIA+jxlljEa1/ffXKmRjqdmIQ=
 github.com/leodido/go-urn v1.4.0/go.mod h1:bvxc+MVxLKB4z00jd1z+Dvzr47oO32F/QSNjSBOlFxI=
+github.com/lgdzz/vingo-utils-exception v1.0.2 h1:HS7sDtjqbXCgx7Xrft+HHKpzflgP0a97AtS+VGTa5gU=
+github.com/lgdzz/vingo-utils-exception v1.0.2/go.mod h1:rZmZQ+g6BGZI0UdxLe4k2odNZa6bHyiwkTPU9QC0rkw=
+github.com/lgdzz/vingo-utils-exception v1.0.3 h1:IiUWgzUSPBkg0WQmWLW8od8QlfTTIcUXMBHY/egliNc=
+github.com/lgdzz/vingo-utils-exception v1.0.3/go.mod h1:rZmZQ+g6BGZI0UdxLe4k2odNZa6bHyiwkTPU9QC0rkw=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
 github.com/mattn/go-colorable v0.1.13/go.mod h1:7S9/ev0klgBDR4GtXTXX8a3vIGJpMovkB8vQcUbaXHg=
 github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=

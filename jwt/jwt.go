@@ -3,6 +3,7 @@ package jwt
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/lgdzz/vingo-utils-exception/exception"
 	"github.com/lgdzz/vingo-utils-v3/cryptor"
 	"github.com/lgdzz/vingo-utils-v3/redis"
 	"github.com/lgdzz/vingo-utils-v3/vingo"
@@ -75,13 +76,13 @@ func (s *Api[T]) Check(token string) Body[T] {
 		return []byte(s.Secret), nil
 	})
 	if err != nil {
-		panic(&vingo.AuthException{Message: err.Error()})
+		panic(&exception.AuthException{Message: err.Error()})
 	}
 	body := vingo.Convert[Body[T]](claims.Claims)
 	if body.CheckTK {
 		var tk string
 		if !s.Api.Get(body.Ticket.Key, &tk) || tk != body.Ticket.TK {
-			panic(&vingo.AuthException{Message: "登录已失效"})
+			panic(&exception.AuthException{Message: "登录已失效"})
 		}
 	}
 	return body
