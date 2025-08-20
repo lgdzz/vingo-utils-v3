@@ -45,6 +45,12 @@ func (b Bool) MarshalJSON() ([]byte, error) {
 }
 
 func (b *Bool) UnmarshalJSON(data []byte) error {
+	// 如果为空或 null，直接设为 false
+	if string(data) == "null" || len(data) == 0 {
+		*b = False
+		return nil
+	}
+
 	var temp interface{}
 	if err := json.Unmarshal(data, &temp); err != nil {
 		panic(fmt.Sprintf("Bool.UnmarshalJSON unmarshal error: %v", err))
@@ -57,7 +63,7 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 	case string:
 		*b = v == "1" || v == "true" || v == "TRUE"
 	default:
-		panic(fmt.Sprintf("Bool.UnmarshalJSON unsupported type: %T", v))
+		*b = False
 	}
 	return nil
 }

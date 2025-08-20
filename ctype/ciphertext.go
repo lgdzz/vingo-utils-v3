@@ -74,6 +74,12 @@ func (s Ciphertext) MarshalJSON() ([]byte, error) {
 }
 
 func (s *Ciphertext) UnmarshalJSON(b []byte) error {
+	// 如果为空或 null，直接设为 false
+	if string(b) == "null" || len(b) == 0 {
+		*s = ""
+		return nil
+	}
+
 	var val string
 	if err := json.Unmarshal(b, &val); err != nil {
 		return err

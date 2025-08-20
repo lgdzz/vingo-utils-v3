@@ -56,6 +56,13 @@ func (s Strings[T]) MarshalJSON() ([]byte, error) {
 }
 
 func (s *Strings[T]) UnmarshalJSON(b []byte) error {
+	str := strings.TrimSpace(string(b))
+	// null 或 空，直接置为空 slice
+	if str == "null" || str == `""` || len(str) == 0 {
+		*s = Strings[T]{}
+		return nil
+	}
+
 	if err := json.Unmarshal(b, (*[]T)(s)); err != nil {
 		panic(fmt.Sprintf("String.UnmarshalJSON error: %v", err))
 	}
