@@ -113,6 +113,23 @@ func (s *PgsqlAdapter) GetColumns(tableName string) ([]Column, error) {
 		`
 	err := s.db.Raw(queryColumn, tableName).Scan(&columns).Error
 
+	if err == nil {
+		columns = slice.Map(columns, func(index int, item Column) Column {
+			t := strings.ToLower(item.Type) // 统一小写
+			switch {
+			case strutil.ContainsAny(t, []string{"bool", "tinyint(1)"}):
+				item.BusinessType = "bool"
+			case strutil.ContainsAny(t, []string{"date", "datetime", "timestamp"}):
+				item.BusinessType = "datetime"
+			case strutil.ContainsAny(t, []string{"int", "bigint", "float", "double", "decimal"}):
+				item.BusinessType = "number"
+			default:
+				item.BusinessType = "string"
+			}
+			return item
+		})
+	}
+
 	return columns, err
 }
 

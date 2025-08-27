@@ -36,17 +36,18 @@ type Table struct {
 }
 
 type Column struct {
-	Field    string
-	Field2   string
-	Type     string
-	Null     string
-	Key      string
-	Default  sql.NullString
-	Extra    string
-	Comment  string
-	DataName string
-	DataType string
-	JsonName string
+	Field        string
+	Field2       string
+	Type         string
+	Null         string
+	Key          string
+	Default      sql.NullString
+	Extra        string
+	Comment      string
+	DataName     string
+	DataType     string
+	JsonName     string
+	BusinessType string // 业务类型：number、string、bool、datetime
 }
 
 func NewCommon(db *gorm.DB) *Common {
