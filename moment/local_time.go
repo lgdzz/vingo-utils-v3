@@ -146,22 +146,22 @@ func (t LocalTime) AddDaysWithTime(days, hour, min, sec int) LocalTime {
 	return LocalTime(time.Date(y, m, d, hour, min, sec, 0, newTime.Location()))
 }
 
-// 当前时间在t之后
-func (t LocalTime) IsAfterNow() bool {
+// GTNow 当前时间>t
+func (t LocalTime) GtNow() bool {
 	return time.Now().After(time.Time(t))
 }
 
-// 当前时间在t之前
-func (t LocalTime) IsBeforeNow() bool {
-	return time.Now().Before(time.Time(t))
+// LtNow 当前时间<t
+func (t LocalTime) LtNow() bool {
+	return time.Time(t).After(time.Now())
 }
 
-// t在o之后
-func (t LocalTime) IsAfter(o LocalTime) bool {
+// Gt t>o
+func (t LocalTime) Gt(o LocalTime) bool {
 	return time.Time(t).After(time.Time(o))
 }
 
-// t在o之前
-func (t LocalTime) IsBefore(o LocalTime) bool {
-	return time.Time(t).Before(time.Time(o))
+// Lt t<o
+func (t LocalTime) Lt(o LocalTime) bool {
+	return time.Time(o).After(time.Time(t))
 }

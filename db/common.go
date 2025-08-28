@@ -7,6 +7,7 @@
 // QueryWhere(nil, "张三", "name1").Or(mysql.QueryWhereFindInSet(nil, "1,2,3", "name2"))
 // QueryWhereFindInSet(nil, "1,2,3", "name1").Or(mysql.QueryWhereFindInSet(nil, "1,2,3", "name2"))
 // QueryWhere的都支持闭包Or组装
+// 用法：tx.Where(QueryWhere1().Or(QueryWhere2()))
 //
 //
 // *****************************************************************************
