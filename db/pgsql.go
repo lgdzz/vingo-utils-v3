@@ -248,6 +248,9 @@ func (s *PgsqlAdapter) modelFile(tableName string) (bool, error) {
 
 // QueryWhereFindInSet 在字符串[1,2,3...]集合中查找
 func (s *PgsqlAdapter) QueryWhereFindInSet(db *gorm.DB, input TextSlice, column string) *gorm.DB {
+	if db == nil {
+		db = s.db
+	}
 	if input != "" {
 		var text []string
 		list := input.ToSlice()
