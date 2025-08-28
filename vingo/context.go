@@ -353,6 +353,57 @@ func (s *DataScope) Handle(c *Context) {
 	}
 }
 
+// 注册get路由
+func RoutesGet(g *gin.RouterGroup, path string, handler func(*Context)) {
+	g.GET(path, func(c *gin.Context) {
+		context := &Context{Context: c}
+		handler(context)
+		if ApiOplog.Enable {
+			go ApiOplog.Write(context)
+		}
+	})
+}
+
+// RoutesPost 注册post路由
+func RoutesPost(g *gin.RouterGroup, path string, handler func(*Context)) {
+	g.POST(path, func(c *gin.Context) {
+		context := &Context{Context: c}
+		handler(context)
+		if ApiOplog.Enable {
+			go ApiOplog.Write(context)
+		}
+	})
+}
+
+// RoutesPut 注册put路由
+func RoutesPut(g *gin.RouterGroup, path string, handler func(*Context)) {
+	g.PUT(path, func(c *gin.Context) {
+		context := &Context{Context: c}
+		handler(context)
+		if ApiOplog.Enable {
+			go ApiOplog.Write(context)
+		}
+	})
+}
+
+// RoutesPatch 注册patch路由
+func RoutesPatch(g *gin.RouterGroup, path string, handler func(*Context)) {
+	g.PATCH(path, func(c *gin.Context) {
+		context := &Context{Context: c}
+		handler(context)
+		if ApiOplog.Enable {
+			go ApiOplog.Write(context)
+		}
+	})
+}
+
+// RoutesDelete 注册delete路由
+func RoutesDelete(g *gin.RouterGroup, path string, handler func(*Context)) {
+	g.DELETE(path, func(c *gin.Context) {
+		handler(&Context{Context: c})
+	})
+}
+
 // GetRequestBody 获取请求body
 // GetRequestBody[结构体类型](c)
 func GetRequestBody[T any](c *Context, valid ...bool) T {
