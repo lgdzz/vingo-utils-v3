@@ -101,3 +101,15 @@ func (s *MinIOAdapter) UploadBase64(objectName string, contentType string, fileB
 		panic(err.Error())
 	}
 }
+
+// PutSign 获取对象put上传签名
+func (s *MinIOAdapter) PutSign(objectName string) map[string]any {
+	url, err := s.client.PresignedPutObject(context.Background(), s.Config.Bucket, objectName, time.Minute*10)
+	if err != nil {
+		panic(err.Error())
+	}
+	return map[string]any{
+		"key": objectName,
+		"url": url.String(),
+	}
+}
