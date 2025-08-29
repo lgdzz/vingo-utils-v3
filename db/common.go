@@ -132,6 +132,28 @@ func (s *Common) TxExists(tx *gorm.DB, model any, condition ...any) bool {
 	return true
 }
 
+// ExistsWithDiff 查询记录是否存在
+func (s *Common) ExistsWithDiff(model any, condition ...any) bool {
+	err := s.Diff().First(model, condition...).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false
+	} else if err != nil {
+		panic(err.Error())
+	}
+	return true
+}
+
+// TxExistsWithDiff 事务内查询记录是否存在
+func (s *Common) TxExistsWithDiff(tx *gorm.DB, model any, condition ...any) bool {
+	err := tx.Set("diff", true).First(model, condition...).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false
+	} else if err != nil {
+		panic(err.Error())
+	}
+	return true
+}
+
 // NotExistsErr 记录不存在时抛出错误
 func (s *Common) NotExistsErr(model any, condition ...any) {
 	err := s.DB.First(model, condition...).Error
