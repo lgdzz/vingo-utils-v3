@@ -82,7 +82,7 @@ type QueryOption[T any] struct {
 	Orders   *[]PageOrder     // 预设排序规则
 	Iteratee func(int, T) any // 映射函数（可选）
 
-	IterateePool func(*T)       // 映射函数（协程池）
+	IterateePool func(int, *T)  // 映射函数（协程池）
 	PoolResult   *[]pool.Result // 协程池结果
 	MaxWorkers   int            // 最大协程数
 }
@@ -143,7 +143,7 @@ func NewPage[T any](option QueryOption[T]) PageResult {
 		for index := range records {
 			p.Submit(func(_ context.Context) pool.Result {
 				return pool.BusinessHandle(&records[index], index, func(object *T) any {
-					option.IterateePool(object)
+					option.IterateePool(index, object)
 					return nil
 				})
 			})

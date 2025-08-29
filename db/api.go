@@ -228,9 +228,9 @@ func setDiffNewValue(dest any) *string {
 type QueryListOption[T any] struct {
 	Iteratee func(i int, item T) any
 
-	IterateePool func(*T)       // 映射函数（协程池）
-	PoolResult   *[]pool.Result // 协程池结果
-	MaxWorkers   int            // 最大协程数
+	IterateePool func(i int, item *T) // 映射函数（协程池）
+	PoolResult   *[]pool.Result       // 协程池结果
+	MaxWorkers   int                  // 最大协程数
 
 	IsTree       bool // 是否返回树结构，只支持id,pid为number类型的主键，其他情况使用ListCallback自定义
 	ListCallback func(list []T) any
