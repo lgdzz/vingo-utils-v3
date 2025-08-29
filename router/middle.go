@@ -10,10 +10,8 @@ import (
 func BaseMiddle(hook *Hook) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		method := c.Request.Method
-		// 允许的方法
-		switch c.Request.Method {
-		case http.MethodGet, http.MethodPost:
 
+		if _, ok := hook.AllowMethods[method]; ok {
 			startTime := time.Now()
 			c.Set("requestStart", startTime)
 			c.Set("requestUUID", vingo.GetUUID())
@@ -21,9 +19,8 @@ func BaseMiddle(hook *Hook) gin.HandlerFunc {
 			if hook.BaseMiddle != nil {
 				hook.BaseMiddle(c)
 			}
-
-		default:
-			// 禁用 TRACE/TRACK 以及其他未显式允许的方法
+		} else {
+			// 禁止的方法
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 				"error": "Forbidden method: " + method,
 			})

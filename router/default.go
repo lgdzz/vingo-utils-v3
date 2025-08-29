@@ -2,6 +2,7 @@ package router
 
 import (
 	"fmt"
+	"github.com/duke-git/lancet/v2/maputil"
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gin-gonic/gin"
 	"github.com/lgdzz/vingo-utils-v3/db"
@@ -16,7 +17,8 @@ type Hook struct {
 	Option         HookOption
 	RegisterRouter func(r *gin.Engine)
 	BaseMiddle     func(c *gin.Context)
-	LoadWeb        []WebItem // 通过此配置将前端项目打包到项目中
+	LoadWeb        []WebItem           // 通过此配置将前端项目打包到项目中
+	AllowMethods   map[string]struct{} // 默认支持get、post，如需额外其他方法在此处增加
 }
 
 type HookOption struct {
@@ -56,6 +58,13 @@ func InitRouter(hook *Hook) {
 			http.FileServer(currentItem.FS).ServeHTTP(c.Writer, c.Request)
 		})
 	}
+
+	// 定义允许的方法
+	hook.AllowMethods = maputil.Merge(map[string]struct{}{
+		// 默认支持的方法
+		http.MethodGet:  {},
+		http.MethodPost: {},
+	}, hook.AllowMethods)
 
 	// 屏蔽搜索引擎爬虫
 	vingo.ShieldRobots(r)
