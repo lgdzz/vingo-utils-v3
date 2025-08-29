@@ -82,3 +82,5 @@ func (s QiNiuAdapter) bucketManager() *objects.Bucket {
 	}
 	return s.manager
 }
+
+func (s *QiNiuAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {}

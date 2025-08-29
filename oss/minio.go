@@ -8,6 +8,7 @@ package oss
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -84,4 +85,19 @@ func (s MinIOAdapter) Delete(objectName string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *MinIOAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {
+	var fileBase64Array = strings.Split(fileBase64, ",")
+	if len(fileBase64Array) > 1 {
+		fileBase64 = fileBase64Array[1]
+	}
+	data, err := base64.StdEncoding.DecodeString(fileBase64)
+	if err != nil {
+		panic(err.Error())
+	}
+	_, err = s.client.PutObject(context.Background(), s.Config.Bucket, objectName, strings.NewReader(string(data)), int64(len(data)), minio.PutObjectOptions{ContentType: contentType})
+	if err != nil {
+		panic(err.Error())
+	}
 }
