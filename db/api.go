@@ -15,6 +15,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/lgdzz/vingo-utils-exception/exception"
 	"github.com/lgdzz/vingo-utils-v3/ctype"
+	"github.com/lgdzz/vingo-utils-v3/pool"
 	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"gorm.io/gorm"
 	"reflect"
@@ -225,7 +226,12 @@ func setDiffNewValue(dest any) *string {
 }
 
 type QueryListOption[T any] struct {
-	Iteratee     func(i int, item T) any
+	Iteratee func(i int, item T) any
+
+	IterateePool func(*T)       // 映射函数（协程池）
+	PoolResult   *[]pool.Result // 协程池结果
+	MaxWorkers   int            // 最大协程数
+
 	IsTree       bool // 是否返回树结构，只支持id,pid为number类型的主键，其他情况使用ListCallback自定义
 	ListCallback func(list []T) any
 }
@@ -272,9 +278,12 @@ func QueryList[T any](db *gorm.DB, pq PageQuery, option *QueryListOption[T]) any
 
 	// 分页模式
 	return NewPage(QueryOption[T]{
-		Db:       db,
-		Query:    pq,
-		Iteratee: option.Iteratee,
+		Db:           db,
+		Query:        pq,
+		Iteratee:     option.Iteratee,
+		IterateePool: option.IterateePool,
+		PoolResult:   option.PoolResult,
+		MaxWorkers:   option.MaxWorkers,
 	})
 }
 
