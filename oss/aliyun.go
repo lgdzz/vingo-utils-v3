@@ -88,3 +88,7 @@ func (s AliYunAdapter) Delete(objectName string) error {
 }
 
 func (s *AliYunAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {}
+
+func (s *AliYunAdapter) Client() any {
+	return s.client
+}

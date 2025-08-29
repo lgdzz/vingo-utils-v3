@@ -84,3 +84,10 @@ func (s QiNiuAdapter) bucketManager() *objects.Bucket {
 }
 
 func (s *QiNiuAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {}
+
+func (s *QiNiuAdapter) Client() any {
+	return map[string]any{
+		"mac":     s.mac,
+		"manager": s.manager,
+	}
+}

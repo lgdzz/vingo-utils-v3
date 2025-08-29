@@ -113,3 +113,7 @@ func (s *MinIOAdapter) PutSign(objectName string) map[string]any {
 		"url": url.String(),
 	}
 }
+
+func (s *MinIOAdapter) Client() any {
+	return s.client
+}

@@ -11,4 +11,5 @@ type Adapter interface {
 	UploadSign(objectName string) any                                      // 上传签名
 	Delete(objectName string) error                                        // 删除文件
 	UploadBase64(objectName string, contentType string, fileBase64 string) // 上传base64
+	Client() any
 }
