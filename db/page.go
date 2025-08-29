@@ -7,7 +7,10 @@
 package db
 
 import (
+	"context"
 	"fmt"
+	"github.com/lgdzz/vingo-utils-v3/pool"
+	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"gorm.io/gorm"
 	"strings"
 )
@@ -78,6 +81,10 @@ type QueryOption[T any] struct {
 	DefOrder *PageOrder       // 默认排序
 	Orders   *[]PageOrder     // 预设排序规则
 	Iteratee func(int, T) any // 映射函数（可选）
+
+	IterateePool func(*T)       // 映射函数（协程池）
+	PoolResult   *[]pool.Result // 协程池结果
+	MaxWorkers   int            // 最大协程数
 }
 
 func (s *QueryOption[T]) BuildOrderString() string {
@@ -127,6 +134,23 @@ func NewPage[T any](option QueryOption[T]) PageResult {
 			list = append(list, option.Iteratee(index, item))
 		}
 		result.Items = list
+	} else if option.IterateePool != nil {
+		if option.MaxWorkers <= 0 {
+			option.MaxWorkers = 100
+		}
+		p := pool.NewGoroutinePool(context.Background(), option.MaxWorkers)
+		p.Run()
+		for index := range records {
+			p.Submit(func(_ context.Context) pool.Result {
+				return pool.BusinessHandle(&records[index], index, func(object *T) any {
+					option.IterateePool(object)
+					return nil
+				})
+			})
+
+		}
+		option.PoolResult = vingo.Of(p.CloseAndWait())
+		result.Items = records
 	} else {
 		result.Items = records
 	}
