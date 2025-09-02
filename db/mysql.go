@@ -182,9 +182,9 @@ func (s *MysqlAdapter) modelFile(tableName string) (bool, error) {
 			col.DataType = "int"
 		case strutil.HasPrefixAny(col.Type, []string{"decimal"}):
 			col.DataType = "float64"
-		case col.Field == "deletedAt":
+		case strutil.HasPrefixAny(col.Field, []string{"deletedAt", "deleted_at"}):
 			col.DataType = "gorm.DeletedAt"
-		case strutil.HasPrefixAny(col.Type, []string{"datetime"}):
+		case strutil.HasPrefixAny(col.Type, []string{"timestamp", "datetime"}):
 			col.DataType = "*moment.LocalTime"
 		default:
 			col.DataType = "string"

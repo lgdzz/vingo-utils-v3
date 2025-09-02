@@ -92,6 +92,10 @@ func (t *LocalTime) Scan(v interface{}) error {
 	return nil
 }
 
+//func (t LocalTime) GormDataType() string {
+//	return "datetime" // 或者 "timestamp"
+//}
+
 func (t LocalTime) Now() LocalTime {
 	return LocalTime(time.Now().Local())
 }
