@@ -238,6 +238,9 @@ func (c *Context) SetRoleTags(value []string) {
 func (c *Context) SetDataScope(value int) {
 	c.Set("dataScope", value)
 }
+func (c *Context) SetIsManageChannel(value bool) {
+	c.Set("isManageChannel", value)
+}
 
 func (c *Context) GetUserId() int {
 	return c.GetInt("userId")
@@ -283,6 +286,9 @@ func (c *Context) GetRoleTags() []string {
 }
 func (c *Context) GetDataScope() int {
 	return c.GetInt("dataScope")
+}
+func (c *Context) GetIsManageChannel() bool {
+	return c.GetBool("isManageChannel")
 }
 
 func (c *Context) getTexts(key string) []string {
