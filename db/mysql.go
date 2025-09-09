@@ -243,3 +243,7 @@ func (s *MysqlAdapter) QueryWhereFindInSet(db *gorm.DB, input TextSlice, column 
 	}
 	return db
 }
+
+func (s *MysqlAdapter) JsonExtract(column string, key string) string {
+	return fmt.Sprintf("JSON_EXTRACT(%v,'$.%v')", column, key)
+}

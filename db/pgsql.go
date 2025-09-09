@@ -268,3 +268,7 @@ func (s *PgsqlAdapter) QueryWhereFindInSet(db *gorm.DB, input TextSlice, column 
 	}
 	return db
 }
+
+func (s *PgsqlAdapter) JsonExtract(column string, key string) string {
+	return fmt.Sprintf("(%v->>'%v')::numeric", column, key)
+}
