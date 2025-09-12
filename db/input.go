@@ -98,6 +98,10 @@ func (s Id) String() string {
 	return vingo.ToString(s.Id)
 }
 
+type UUID struct {
+	UUID string `form:"uuid"`
+}
+
 type Keyword struct {
 	Keyword string `form:"keyword" json:"keyword"`
 }
