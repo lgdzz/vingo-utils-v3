@@ -168,3 +168,15 @@ func convertToT[T any](str string) T {
 		panic("不支持的类型")
 	}
 }
+
+func IntsToTextSlice(ints []int) TextSlice {
+	var text []string
+	for _, i := range ints {
+		text = append(text, strconv.Itoa(i))
+	}
+	return TextSlice(strings.Join(text, ","))
+}
+
+func StringsToTextSlice(text []string) TextSlice {
+	return TextSlice(strings.Join(text, ","))
+}
