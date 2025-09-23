@@ -97,8 +97,7 @@ func RegisterAfterCreate(api *Api) {
 func RegisterBeforeUpdate(api *Api) {
 	err := api.DB.Callback().Update().Before("gorm:before_update").Register("vingo:before_update", func(db *gorm.DB) {
 		// 处理diff新值（更新前）
-		description := setDiffNewValue(db.Statement.Dest)
-		db.Set("diff_description", description)
+		setDiffNewValue(db.Statement.Dest)
 	})
 	if err != nil {
 		panic(fmt.Sprintf("插件注册失败: %v", err.Error()))
@@ -115,19 +114,16 @@ func RegisterAfterUpdate(api *Api) {
 
 		// 处理diff新值（更新后，补充一些钩子中的赋值）
 		description := setDiffNewValue(db.Statement.Dest)
-		db.Set("diff_description", description)
 
 		// 更新后写变更日志
 		if api.ChangeLog != nil {
 			if ctx, ok := db.Get("ctx"); ok {
-				if description, ok := db.Get("diff_description"); ok {
-					api.ChangeLog(db.Session(&gorm.Session{NewDB: true}), ChangeLogOption{
-						Ctx:             ctx,
-						TableName:       db.Statement.Table,
-						Description:     description.(*string),
-						PrimaryKeyValue: getPrimaryKeyValue(db),
-					})
-				}
+				api.ChangeLog(db.Session(&gorm.Session{NewDB: true}), ChangeLogOption{
+					Ctx:             ctx,
+					TableName:       db.Statement.Table,
+					Description:     description,
+					PrimaryKeyValue: getPrimaryKeyValue(db),
+				})
 			}
 		}
 	})
