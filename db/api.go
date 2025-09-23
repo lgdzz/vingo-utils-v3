@@ -72,6 +72,7 @@ func RegisterAfterQuery(api *Api) {
 
 		// 如果开启diff
 		if need, ok := db.Get("diff"); ok && need.(bool) {
+			db.InstanceSet("diff", false) // 下次不再触发
 			setDiffOldValue(db.Statement.Dest)
 		}
 	})
