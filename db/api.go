@@ -98,21 +98,7 @@ func RegisterBeforeUpdate(api *Api) {
 	err := api.DB.Callback().Update().Before("gorm:before_update").Register("vingo:before_update", func(db *gorm.DB) {
 		// 处理diff新值
 		description := setDiffNewValue(db.Statement.Dest)
-		// 变更日志
-		if api.ChangeLog != nil {
-			var ctx any
-			if c, ok := db.Get("ctx"); ok {
-				ctx = c
-			}
-			if description != nil {
-				api.ChangeLog(db.Session(&gorm.Session{}), ChangeLogOption{
-					Ctx:             ctx,
-					TableName:       db.Statement.Table,
-					Description:     description,
-					PrimaryKeyValue: getPrimaryKeyValue(db),
-				})
-			}
-		}
+		db.Set("diff_description", description)
 	})
 	if err != nil {
 		panic(fmt.Sprintf("插件注册失败: %v", err.Error()))
@@ -125,6 +111,26 @@ func RegisterAfterUpdate(api *Api) {
 		if db.Error != nil {
 			_, _ = color.New(color.FgRed).Printf("[DB ERROR] %T: %v\n", db.Error, db.Error)
 			panic(&exception.DbException{Message: db.Error.Error()})
+		}
+
+		// 变更日志
+		if api.ChangeLog != nil {
+			var ctx any
+			var description *string
+			if c, ok := db.Get("ctx"); ok {
+				ctx = c
+			}
+			if d, ok := db.Get("diff_description"); ok {
+				description = d.(*string)
+			}
+			if description != nil {
+				api.ChangeLog(db.Session(&gorm.Session{}), ChangeLogOption{
+					Ctx:             ctx,
+					TableName:       db.Statement.Table,
+					Description:     description,
+					PrimaryKeyValue: getPrimaryKeyValue(db),
+				})
+			}
 		}
 	})
 	if err != nil {
