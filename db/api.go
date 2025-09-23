@@ -96,7 +96,7 @@ func RegisterAfterCreate(api *Api) {
 
 func RegisterBeforeUpdate(api *Api) {
 	err := api.DB.Callback().Update().Before("gorm:before_update").Register("vingo:before_update", func(db *gorm.DB) {
-		// 处理diff新值
+		// 处理diff新值（更新前）
 		description := setDiffNewValue(db.Statement.Dest)
 		db.Set("diff_description", description)
 	})
@@ -112,6 +112,10 @@ func RegisterAfterUpdate(api *Api) {
 			_, _ = color.New(color.FgRed).Printf("[DB ERROR] %T: %v\n", db.Error, db.Error)
 			panic(&exception.DbException{Message: db.Error.Error()})
 		}
+
+		// 处理diff新值（更新后，补充一些钩子中的赋值）
+		description := setDiffNewValue(db.Statement.Dest)
+		db.Set("diff_description", description)
 
 		// 更新后写变更日志
 		if api.ChangeLog != nil {
