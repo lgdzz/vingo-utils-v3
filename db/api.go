@@ -113,23 +113,17 @@ func RegisterAfterUpdate(api *Api) {
 			panic(&exception.DbException{Message: db.Error.Error()})
 		}
 
-		// 变更日志
+		// 更新后写变更日志
 		if api.ChangeLog != nil {
-			var ctx any
-			var description *string
-			if c, ok := db.Get("ctx"); ok {
-				ctx = c
-			}
-			if d, ok := db.Get("diff_description"); ok {
-				description = d.(*string)
-			}
-			if description != nil {
-				api.ChangeLog(db.Session(&gorm.Session{}), ChangeLogOption{
-					Ctx:             ctx,
-					TableName:       db.Statement.Table,
-					Description:     description,
-					PrimaryKeyValue: getPrimaryKeyValue(db),
-				})
+			if ctx, ok := db.Get("ctx"); ok {
+				if description, ok := db.Get("diff_description"); ok {
+					api.ChangeLog(db.Session(&gorm.Session{NewDB: true}), ChangeLogOption{
+						Ctx:             ctx,
+						TableName:       db.Statement.Table,
+						Description:     description.(*string),
+						PrimaryKeyValue: getPrimaryKeyValue(db),
+					})
+				}
 			}
 		}
 	})
@@ -193,6 +187,7 @@ func setDiffOldValue(dest any) {
 	if oldField.IsNil() { // ✅ 只有在 Old 没有值时才设置
 		setPtrField(oldField, rv.Interface())
 	}
+
 }
 
 // setDiffNewValue 设置Diff新值
