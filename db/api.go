@@ -96,23 +96,23 @@ func RegisterAfterCreate(api *Api) {
 
 func RegisterBeforeUpdate(api *Api) {
 	err := api.DB.Callback().Update().Before("gorm:before_update").Register("vingo:before_update", func(db *gorm.DB) {
-		//// 处理diff新值
-		//description := setDiffNewValue(db.Statement.Dest)
-		//// 变更日志
-		//if api.ChangeLog != nil {
-		//	var ctx any
-		//	if c, ok := db.Get("ctx"); ok {
-		//		ctx = c
-		//	}
-		//	if description != nil {
-		//		api.ChangeLog(db.Session(&gorm.Session{}), ChangeLogOption{
-		//			Ctx:             ctx,
-		//			TableName:       db.Statement.Table,
-		//			Description:     description,
-		//			PrimaryKeyValue: getPrimaryKeyValue(db),
-		//		})
-		//	}
-		//}
+		// 处理diff新值
+		description := setDiffNewValue(db.Statement.Dest)
+		// 变更日志
+		if api.ChangeLog != nil {
+			var ctx any
+			if c, ok := db.Get("ctx"); ok {
+				ctx = c
+			}
+			if description != nil {
+				api.ChangeLog(db.Session(&gorm.Session{}), ChangeLogOption{
+					Ctx:             ctx,
+					TableName:       db.Statement.Table,
+					Description:     description,
+					PrimaryKeyValue: getPrimaryKeyValue(db),
+				})
+			}
+		}
 	})
 	if err != nil {
 		panic(fmt.Sprintf("插件注册失败: %v", err.Error()))
@@ -183,7 +183,10 @@ func setDiffOldValue(dest any) {
 		return // 不存在或不是结构体字段或不可设置
 	}
 
-	setPtrField(field.FieldByName("Old"), rv.Interface())
+	oldField := field.FieldByName("Old")
+	if oldField.IsNil() { // ✅ 只有在 Old 没有值时才设置
+		setPtrField(oldField, rv.Interface())
+	}
 }
 
 // setDiffNewValue 设置Diff新值
