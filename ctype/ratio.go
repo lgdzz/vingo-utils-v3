@@ -10,6 +10,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strconv"
 )
 
@@ -97,4 +98,10 @@ func (r Ratio) Decimal() float64 {
 // Percent 返回百分数（如 20）
 func (r Ratio) Percent() float64 {
 	return float64(r) * 100
+}
+
+// Mul 用比率乘以一个数值，结果保留两位小数
+func (r Ratio) Mul(value float64) float64 {
+	res := float64(r) * value
+	return math.Round(res*100) / 100 // 保留两位小数
 }
