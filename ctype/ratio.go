@@ -48,7 +48,11 @@ func (r *Ratio) Scan(value any) error {
 
 // MarshalJSON 默认返回百分比（如 20）
 func (r Ratio) MarshalJSON() ([]byte, error) {
-	result, err := json.Marshal(r.Percent())
+	// 保留两位小数
+	p := math.Round(r.Percent()*100) / 100
+
+	// 转成数字（不是字符串）
+	result, err := json.Marshal(p)
 	if err != nil {
 		panic(fmt.Sprintf("Ratio.MarshalJSON error: %v", err))
 	}
