@@ -216,6 +216,14 @@ func StringToInt(s []string) []int {
 	return data
 }
 
+func IntToString(s []int) []string {
+	data := make([]string, len(s))
+	for i, v := range s {
+		data[i] = ToString(v)
+	}
+	return data
+}
+
 // FormatBytes 将字节转换为可读文本
 func FormatBytes(size int64, precision int) string {
 	units := []string{"B", "KB", "MB", "GB", "TB", "PB"}
