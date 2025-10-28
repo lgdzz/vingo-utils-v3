@@ -71,6 +71,24 @@ func (s TextSlice) ToIntSlice() []int {
 	return result
 }
 
+// ToFloatSlice 转换为float切片
+func (s TextSlice) ToFloatSlice() []float64 {
+	result := make([]float64, 0)
+	str := string(s)
+	if str == "" {
+		return result
+	}
+	parts := strings.Split(str, ",")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if i, err := strconv.ParseFloat(part, 64); err == nil {
+			result = append(result, i)
+			continue
+		}
+	}
+	return result
+}
+
 // ToStringSlice 转换为string切片
 func (s TextSlice) ToStringSlice() []string {
 	str := string(s)

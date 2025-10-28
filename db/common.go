@@ -233,10 +233,19 @@ func (s *Common) QueryWhere(db *gorm.DB, input any, column ...string) *gorm.DB {
 }
 
 // QueryWhereIn 包含查询
-func (s *Common) QueryWhereIn(db *gorm.DB, input TextSlice, column string) *gorm.DB {
+func (s *Common) QueryWhereIn(db *gorm.DB, input TextSlice, column string, t ...string) *gorm.DB {
 	db = s.QueryDb(db)
 	if input != "" {
-		db = db.Where(fmt.Sprintf("%v in(?)", column), input.ToSlice())
+		if len(t) > 0 {
+			switch t[0] {
+			case "int":
+				db = db.Where(fmt.Sprintf("%v in(?)", column), input.ToIntSlice())
+			case "string":
+				db = db.Where(fmt.Sprintf("%v in(?)", column), input.ToStringSlice())
+			}
+		} else {
+			db = db.Where(fmt.Sprintf("%v in(?)", column), input.ToSlice())
+		}
 	}
 	return db
 }
