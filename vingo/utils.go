@@ -265,3 +265,11 @@ func PinyinInitial(text string) string {
 	}
 	return initials
 }
+
+// SafeDivision 安全除法（验证被除数为0的情况）
+func SafeDivision(left float64, right float64) float64 {
+	if right == 0 {
+		return 0
+	}
+	return left / right
+}
