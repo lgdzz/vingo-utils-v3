@@ -249,3 +249,34 @@ func GenerateMonths(ts any) []string {
 	}
 	return result
 }
+
+// GetDayFirstMoment 获取指定时间所在日期的初始一刻
+func GetDayFirstMoment(t time.Time) time.Time {
+	y, m, d := t.Date()
+	return time.Date(y, m, d, 0, 0, 0, 0, t.Location())
+}
+
+// GetDayLastMoment 获取指定时间所在日期的最后一刻
+func GetDayLastMoment(t time.Time) time.Time {
+	return GetDayFirstMoment(t).AddDate(0, 0, 1).Add(-time.Second)
+}
+
+// GetMonthFirstMoment 获取指定时间所在月份的初始一刻
+func GetMonthFirstMoment(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location())
+}
+
+// GetMonthLastMoment 获取指定时间所在月份的最后一刻
+func GetMonthLastMoment(t time.Time) time.Time {
+	return GetMonthFirstMoment(t).AddDate(0, 1, 0).Add(-time.Second)
+}
+
+// GetYearFirstMoment 获取指定时间所在年份的初始一刻
+func GetYearFirstMoment(t time.Time) time.Time {
+	return time.Date(t.Year(), time.January, 1, 0, 0, 0, 0, t.Location())
+}
+
+// GetYearLastMoment 获取指定时间所在年份的最后一刻
+func GetYearLastMoment(t time.Time) time.Time {
+	return GetYearFirstMoment(t).AddDate(1, 0, 0).Add(-time.Second)
+}

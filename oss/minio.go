@@ -61,6 +61,7 @@ func (s MinIOAdapter) UploadSign(objectName string) any {
 		panic(err.Error())
 	}
 	url, formData, err := s.client.PresignedPostPolicy(context.Background(), policy)
+
 	if err != nil {
 		panic(err.Error())
 	}
