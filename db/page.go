@@ -9,11 +9,14 @@ package db
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/lgdzz/vingo-utils-v3/pool"
 	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"gorm.io/gorm"
-	"strings"
 )
+
+const ExportSizeThreshold = 1000
 
 type PageResult struct {
 	Page  int   `json:"page"`
@@ -120,12 +123,12 @@ func NewPage[T any](option QueryOption[T]) PageResult {
 		return result
 	}
 
-	// 查询数据
-	var records = make([]T, 0, result.Size)
-	query = query.Order(option.BuildOrderString()).
-		Limit(result.Size).
-		Offset(option.Query.Limit.Offset()).
-		Find(&records)
+	var records []T
+	if result.Size <= ExportSizeThreshold {
+		records = NewPageNormalHandle(option, &result)
+	} else {
+		records = NewPageExportHandle(option, &result)
+	}
 
 	// 转换处理
 	if option.Iteratee != nil {
@@ -154,6 +157,52 @@ func NewPage[T any](option QueryOption[T]) PageResult {
 	} else {
 		result.Items = records
 	}
-
 	return result
+}
+
+func NewPageNormalHandle[T any](option QueryOption[T], result *PageResult) []T {
+	// 查询数据
+	var records = make([]T, 0, getMinSize(int(result.Total), result.Size))
+	option.Db.Order(option.BuildOrderString()).
+		Limit(result.Size).
+		Offset(option.Query.Limit.Offset()).
+		Find(&records)
+	return records
+}
+
+func NewPageExportHandle[T any](option QueryOption[T], result *PageResult) []T {
+	rows, err := option.Db.
+		Order(option.BuildOrderString()).
+		Rows()
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	records := make([]T, 0, getMinSize(int(result.Total), result.Size))
+
+	index := 0
+	for rows.Next() {
+		var item T
+		if err := option.Db.ScanRows(rows, &item); err != nil {
+			panic(err)
+		}
+
+		records = append(records, item)
+		index++
+
+		// 防止真的无限拉
+		if index >= result.Size {
+			break
+		}
+	}
+
+	return records
+}
+
+func getMinSize(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
