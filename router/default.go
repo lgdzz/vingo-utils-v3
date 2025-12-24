@@ -2,6 +2,11 @@ package router
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"runtime"
+	"time"
+
 	"github.com/duke-git/lancet/v2/maputil"
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gin-gonic/gin"
@@ -9,8 +14,7 @@ import (
 	"github.com/lgdzz/vingo-utils-v3/moment"
 	"github.com/lgdzz/vingo-utils-v3/redis"
 	"github.com/lgdzz/vingo-utils-v3/vingo"
-	"net/http"
-	"time"
+	"github.com/shirou/gopsutil/v3/process"
 )
 
 type Hook struct {
@@ -19,6 +23,7 @@ type Hook struct {
 	BaseMiddle     func(c *gin.Context)
 	LoadWeb        []WebItem           // 通过此配置将前端项目打包到项目中
 	AllowMethods   map[string]struct{} // 默认支持get、post，如需额外其他方法在此处增加
+
 }
 
 type HookOption struct {
@@ -83,6 +88,10 @@ func InitRouter(hook *Hook) {
 		Console(c, option)
 	})
 
+	r.GET("/favicon.ico", func(c *gin.Context) {
+		c.Status(204) // No Content
+	})
+
 	// 注册路由
 	if hook.RegisterRouter == nil {
 		fmt.Println("请实现hook.RegisterRouter")
@@ -106,7 +115,7 @@ func InitRouter(hook *Hook) {
 
 	option.startTime = time.Now()
 
-	vingo.ApiAddress(int(option.Port))
+	vingo.ApiAddress(option.Port)
 	fmt.Println(fmt.Sprintf("+ 启动时间：%v", option.startTime.Format(moment.DateTimeFormat)))
 	fmt.Println(fmt.Sprintf("+ 技术支持：%v", option.Copyright))
 	fmt.Println("+------------------------------------------------------------+")
@@ -116,9 +125,17 @@ func InitRouter(hook *Hook) {
 }
 
 func Console(c *gin.Context, option HookOption) {
+
+	p, _ := process.NewProcess(int32(os.Getpid()))
+	mem, _ := p.MemoryInfo()
+
+	ctx := vingo.Context{Context: c}
 	c.JSON(200, gin.H{
-		"启动时间": option.startTime.Format(moment.DateTimeFormat),
-		"已运行":  FormatDuration(option.startTime, time.Now()),
+		"Start Time":   option.startTime.Format(moment.DateTimeFormat),
+		"Running Time": FormatDuration(option.startTime, time.Now()),
+		"Use Memory":   vingo.FormatBytes(int64(mem.RSS), 2),
+		"Goroutines":   runtime.NumGoroutine(),
+		"Client IP":    ctx.ClientIP(),
 	})
 }
 

@@ -9,17 +9,20 @@ package vingo
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/duke-git/lancet/v2/convertor"
-	"github.com/duke-git/lancet/v2/formatter"
-	"github.com/google/uuid"
-	"github.com/mozillazg/go-pinyin"
+	"log"
 	"math/big"
 	"math/rand"
 	"os"
 	"os/exec"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"time"
+
+	"github.com/duke-git/lancet/v2/convertor"
+	"github.com/duke-git/lancet/v2/formatter"
+	"github.com/google/uuid"
+	"github.com/mozillazg/go-pinyin"
 )
 
 // Print 格式化打印输出
@@ -31,6 +34,17 @@ func Print(content any) {
 // Of 返回传入参数的指针
 func Of[T any](v T) *T {
 	return &v
+}
+
+func GoSafe(fn func()) {
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("[PANIC] %v\n%s", r, debug.Stack())
+			}
+		}()
+		fn()
+	}()
 }
 
 // GetModuleName 获取当前项目模块名称(mod-name)

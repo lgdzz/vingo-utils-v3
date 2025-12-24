@@ -9,11 +9,12 @@ package oss
 import (
 	"context"
 	"fmt"
-	aliyun "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
-	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
 	"log"
 	"strings"
 	"time"
+
+	aliyun "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
 )
 
 func NewAliYun(config Config) *Api {
@@ -87,8 +88,8 @@ func (s AliYunAdapter) Delete(objectName string) error {
 	return nil
 }
 
-func (s *AliYunAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {}
+func (s AliYunAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {}
 
-func (s *AliYunAdapter) Client() any {
+func (s AliYunAdapter) Client() any {
 	return s.client
 }

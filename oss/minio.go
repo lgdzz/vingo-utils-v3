@@ -10,10 +10,11 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"strings"
 	"time"
+
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 func NewMinIO(config Config) *Api {
@@ -88,7 +89,7 @@ func (s MinIOAdapter) Delete(objectName string) error {
 	return nil
 }
 
-func (s *MinIOAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {
+func (s MinIOAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {
 	var fileBase64Array = strings.Split(fileBase64, ",")
 	if len(fileBase64Array) > 1 {
 		fileBase64 = fileBase64Array[1]
@@ -103,6 +104,6 @@ func (s *MinIOAdapter) UploadBase64(objectName string, contentType string, fileB
 	}
 }
 
-func (s *MinIOAdapter) Client() any {
+func (s MinIOAdapter) Client() any {
 	return s.client
 }

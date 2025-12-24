@@ -4,15 +4,16 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/duke-git/lancet/v2/slice"
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"net"
 	"net/url"
 	"os"
 	"runtime/debug"
 	"strings"
 	"time"
+
+	"github.com/duke-git/lancet/v2/slice"
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type FunctionModule struct {
@@ -95,6 +96,7 @@ func (c *Context) Response(d *ResponseData) {
 	if !d.NoLog {
 		// 记录请求日志
 		go func(context *Context, uuid string, d *ResponseData) {
+			ExceptionCatch("记录请求日志异常", false)
 			startTime := context.GetTime("requestStart")
 			endTime := time.Now()
 			latency := endTime.Sub(startTime)

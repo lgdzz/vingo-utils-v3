@@ -11,16 +11,22 @@ type Api struct {
 	Adapter
 }
 
+const (
+	MinioOss  = "minio"
+	QiniuOss  = "qiniu"
+	AliyunOss = "aliyun"
+)
+
 func NewOSS(config Config) *Api {
 	var api *Api
 	switch config.Driver {
-	case "minio":
+	case MinioOss:
 		api = NewMinIO(config)
 		api.Adapter = NewMinIOAdapter(&config)
-	case "qiniu":
+	case QiniuOss:
 		api = NewQiNiu(config)
 		api.Adapter = NewQiNiuAdapter(&config)
-	case "aliyun":
+	case AliyunOss:
 		api = NewAliYun(config)
 		api.Adapter = NewAliYunAdapter(&config)
 	default:

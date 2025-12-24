@@ -8,12 +8,13 @@ package oss
 
 import (
 	"context"
+	"time"
+
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/go-sdk/v7/storagev2/credentials"
 	"github.com/qiniu/go-sdk/v7/storagev2/http_client"
 	"github.com/qiniu/go-sdk/v7/storagev2/objects"
 	"github.com/qiniu/go-sdk/v7/storagev2/uptoken"
-	"time"
 )
 
 func NewQiNiu(config Config) *Api {
@@ -83,9 +84,9 @@ func (s QiNiuAdapter) bucketManager() *objects.Bucket {
 	return s.manager
 }
 
-func (s *QiNiuAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {}
+func (s QiNiuAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {}
 
-func (s *QiNiuAdapter) Client() any {
+func (s QiNiuAdapter) Client() any {
 	return map[string]any{
 		"mac":     s.mac,
 		"manager": s.manager,
