@@ -10,6 +10,7 @@ import (
 	"github.com/duke-git/lancet/v2/maputil"
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/gin-gonic/gin"
+	"github.com/lgdzz/vingo-utils-v3/cli"
 	"github.com/lgdzz/vingo-utils-v3/db"
 	"github.com/lgdzz/vingo-utils-v3/moment"
 	"github.com/lgdzz/vingo-utils-v3/redis"
@@ -136,6 +137,7 @@ func Console(c *gin.Context, option HookOption) {
 		"Use Memory":   vingo.FormatBytes(int64(mem.RSS), 2),
 		"Goroutines":   runtime.NumGoroutine(),
 		"Client IP":    ctx.ClientIP(),
+		"Version":      cli.Version,
 	})
 }
 
