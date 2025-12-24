@@ -83,6 +83,11 @@ func BuildProject(value string, version string) {
 	case "m":
 		goos = "darwin"
 		osName = "mac"
+		gOARCH = "amd64"
+	case "m_arm":
+		goos = "darwin"
+		osName = "mac"
+		gOARCH = "arm64"
 	case "l_arm":
 		goos = "linux"
 		osName = "linux"
@@ -117,10 +122,15 @@ func BuildProject(value string, version string) {
 	buildTimeVersion := time.Now().Format("V2006.01.02_15.04.05")
 	finalVersion := fmt.Sprintf("%s_%s", version, buildTimeVersion)
 
-	log.Println(strings.Join([]string{"go", "build", "-ldflags=-X github.com/lgdzz/vingo-utils-v3/cli.Version=" + finalVersion, "-o", outputName}, " "))
+	ldflags := strings.Join([]string{
+		"-X " + moduleName + "/extend/config.version=" + version,
+		"-X github.com/lgdzz/vingo-utils-v3/cli.Version=" + finalVersion,
+	}, " ")
+
+	log.Println(strings.Join([]string{"go", "build", "-ldflags=" + ldflags, "-o", outputName}, " "))
 
 	// 执行打包命令
-	cmd := exec.Command("go", "build", "-ldflags=-X github.com/lgdzz/vingo-utils-v3/cli.Version="+finalVersion, "-o", outputName)
+	cmd := exec.Command("go", "build", "-ldflags="+ldflags, "-o", outputName)
 	err = cmd.Run()
 	if err != nil {
 		log.Println("执行打包命令错误：", err.Error())
