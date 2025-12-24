@@ -3,14 +3,18 @@ package cli
 import (
 	"flag"
 	"fmt"
-	"github.com/lgdzz/vingo-utils-v3/db"
-	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/lgdzz/vingo-utils-v3/db"
+	"github.com/lgdzz/vingo-utils-v3/vingo"
 )
+
+var Version = "dev"
 
 type Options struct {
 	Enable      bool
@@ -110,10 +114,13 @@ func BuildProject(value string, version string) {
 
 	outputName = filepath.Join("output", outputName)
 
-	log.Println(strings.Join([]string{"go", "build", "-ldflags=-X " + moduleName + "/extend/config.version=" + version, "-o", outputName}, " "))
+	buildTimeVersion := time.Now().Format("V2006.01.02_15.04.05")
+	finalVersion := fmt.Sprintf("%s_%s", version, buildTimeVersion)
+
+	log.Println(strings.Join([]string{"go", "build", "-ldflags=-X " + moduleName + "/extend/config.Version=" + finalVersion, "-o", outputName}, " "))
 
 	// 执行打包命令
-	cmd := exec.Command("go", "build", "-ldflags=-X "+moduleName+"/extend/config.version="+version, "-o", outputName)
+	cmd := exec.Command("go", "build", "-ldflags=-X "+moduleName+"/extend/config.Version="+finalVersion, "-o", outputName)
 	err = cmd.Run()
 	if err != nil {
 		log.Println("执行打包命令错误：", err.Error())
