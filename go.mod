@@ -29,6 +29,7 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/alex-ant/gomath v0.0.0-20160516115720-89013a210a82 // indirect
+	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
@@ -67,6 +68,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
+	github.com/pquerna/otp v1.5.0 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.7 // indirect

@@ -10,12 +10,15 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"github.com/duke-git/lancet/v2/random"
-	"github.com/lgdzz/vingo-utils-v3/cryptor"
-	"github.com/lgdzz/vingo-utils-v3/moment"
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/duke-git/lancet/v2/random"
+	"github.com/lgdzz/vingo-utils-v3/cryptor"
+	"github.com/lgdzz/vingo-utils-v3/moment"
+	"github.com/pquerna/otp"
+	"github.com/pquerna/otp/totp"
 )
 
 const (
@@ -30,10 +33,14 @@ const (
 type Password Ciphertext
 
 type PasswordObj struct {
-	PasswordMd5 string            `json:"passwordMd5"`
-	Salt        string            `json:"salt"`
-	CreatedAt   *moment.LocalTime `json:"createdAt,omitempty"`
-	IsTemp      bool              `json:"isTemp"`
+	PasswordLevel int               `json:"passwordLevel"`
+	PasswordMd5   string            `json:"passwordMd5"`
+	Salt          string            `json:"salt"`
+	CreatedAt     *moment.LocalTime `json:"createdAt,omitempty"`
+	IsTemp        bool              `json:"isTemp,omitempty"`
+	TotpLogin     bool              `json:"totpLogin,omitempty"` // 登录是否二次验证
+	TotpSecret    string            `json:"totpSecret,omitempty"`
+	TotpUrl       string            `json:"totpUrl,omitempty"`
 }
 
 // ========== GORM 接口 ==========
@@ -56,12 +63,25 @@ func NewPassword(raw string, level int, isTemp bool) Password {
 	salt := random.RandString(6)
 	md5 := cryptor.Md5(cryptor.Md5(raw) + salt)
 	obj := &PasswordObj{
-		PasswordMd5: md5,
-		Salt:        salt,
-		CreatedAt:   moment.NowLocalTime(),
-		IsTemp:      isTemp,
+		PasswordLevel: level,
+		PasswordMd5:   md5,
+		Salt:          salt,
+		CreatedAt:     moment.NowLocalTime(),
+		IsTemp:        isTemp,
 	}
 	return mustMarshalPassword(obj)
+}
+
+// ReplacePassword 替换密码
+func (s *Password) ReplacePassword(raw string, level int, isTemp bool) Password {
+	checkPasswordLevel(raw, level)
+	o := s.getObj()
+	o.Salt = random.RandString(6)
+	o.PasswordMd5 = cryptor.Md5(cryptor.Md5(raw) + o.Salt)
+	o.PasswordLevel = level
+	o.CreatedAt = moment.NowLocalTime()
+	o.IsTemp = isTemp
+	return mustMarshalPassword(o)
 }
 
 // checkPasswordLevel 密码强度检查
@@ -84,6 +104,73 @@ func checkPasswordLevel(raw string, level int) {
 			panic("密码需满足四种字符组合（数字、大写字母、小写字母、特殊符号）")
 		}
 	}
+}
+
+// EnableTotp 启用totp
+func (s *Password) EnableTotp(issuer string, accountName string) {
+	obj := s.getObj()
+	key, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      issuer,
+		AccountName: accountName,
+		Period:      30,
+		Digits:      otp.DigitsSix,
+		Algorithm:   otp.AlgorithmSHA1,
+	})
+	if err != nil {
+		panic(err)
+	}
+	obj.TotpLogin = true
+	obj.TotpSecret = key.Secret()
+	obj.TotpUrl = key.URL()
+	*s = mustMarshalPassword(obj)
+}
+
+// DisableTotp 禁用totp
+func (s *Password) DisableTotp() {
+	o := s.getObj()
+	o.TotpLogin = false
+	o.TotpSecret = ""
+	o.TotpUrl = ""
+	*s = mustMarshalPassword(o)
+}
+
+// GetTotpUrl 获取totp绑定地址
+func (s Password) GetTotpUrl() string {
+	o := s.getObj()
+	return o.TotpUrl
+}
+
+// MatchTotp totp验证
+func (s Password) MatchTotp(code string, skew ...uint) bool {
+	o := s.getObj()
+	if o.TotpSecret == "" {
+		// 未开启直接过
+		return true
+	}
+	var skew_ uint = 1
+	if len(skew) > 0 {
+		skew_ = skew[0]
+	}
+	valid, err := totp.ValidateCustom(code, o.TotpSecret, time.Now(), totp.ValidateOpts{
+		Period:    30,
+		Skew:      skew_, // 允许前后N个周期，默认1个
+		Digits:    otp.DigitsSix,
+		Algorithm: otp.AlgorithmSHA1,
+	})
+	if err != nil {
+		return false
+	}
+	return valid
+}
+
+// GenerateTotpCode 生成totp验证码
+func (s Password) GenerateTotpCode() string {
+	o := s.getObj()
+	code, err := totp.GenerateCode(o.TotpSecret, time.Now())
+	if err != nil {
+		panic(err)
+	}
+	return code
 }
 
 // CreatedAt 获取密码创建时间
