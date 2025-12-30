@@ -173,6 +173,11 @@ func (s Password) GenerateTotpCode() string {
 	return code
 }
 
+func (s Password) GetTotpLogin() bool {
+	o := s.getObj()
+	return o.TotpLogin
+}
+
 // CreatedAt 获取密码创建时间
 func (s Password) CreatedAt() *moment.LocalTime {
 	o := s.getObj()
