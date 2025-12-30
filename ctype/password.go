@@ -119,7 +119,6 @@ func (s *Password) EnableTotp(issuer string, accountName string) {
 	if err != nil {
 		panic(err)
 	}
-	obj.TotpLogin = true
 	obj.TotpSecret = key.Secret()
 	obj.TotpUrl = key.URL()
 	*s = mustMarshalPassword(obj)
@@ -176,6 +175,12 @@ func (s Password) GenerateTotpCode() string {
 func (s Password) GetTotpLogin() bool {
 	o := s.getObj()
 	return o.TotpLogin
+}
+
+func (s *Password) SetTotpLogin(val bool) {
+	o := s.getObj()
+	o.TotpLogin = val
+	*s = mustMarshalPassword(o)
 }
 
 // CreatedAt 获取密码创建时间
