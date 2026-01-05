@@ -6,6 +6,11 @@
 
 package email
 
+const (
+	EMAIL_BIND      = "email.bind"
+	PASSWORD_FORGET = "pwd.forget"
+)
+
 type SenderConfig struct {
 	Host     string `json:"host"`     // SMTP 地址
 	Port     int    `json:"port"`     // SMTP 端口
