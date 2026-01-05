@@ -13,4 +13,5 @@ type SenderConfig struct {
 	Password string `json:"password"` // 发件人密码
 	FromAddr string `json:"fromAddr"` // 发件人邮箱
 	FromName string `json:"fromName"` // 发件人名称
+	OEM      string `json:"oem"`      // 品牌商
 }
