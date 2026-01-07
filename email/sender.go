@@ -7,6 +7,7 @@
 package email
 
 const (
+	EMAIL_CHECK     = "email.check"
 	EMAIL_BIND      = "email.bind"
 	PASSWORD_FORGET = "pwd.forget"
 )
