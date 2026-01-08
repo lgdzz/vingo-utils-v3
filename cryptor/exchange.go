@@ -125,7 +125,7 @@ func ExchangeEncode(text string, times ...int) string {
 
 	// Generate a random prefix and concatenate it with the original text
 	randomPrefix := generateRandomPrefix()
-	encoded := fmt.Sprintf("%d%s%s", len(randomPrefix)-1, randomPrefix, text)
+	encoded := fmt.Sprintf("%s%s", randomPrefix, text)
 
 	// Apply Base64 encoding and swap pairs for the specified number of layers
 	for i := 0; i < layer; i++ {
