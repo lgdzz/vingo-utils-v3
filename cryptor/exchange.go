@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"math/big"
-	"strconv"
 	"strings"
 )
 
@@ -16,13 +15,13 @@ const defaultLayer = 3
 func generateCharset() string {
 	var charset string
 	for i := 65; i <= 90; i++ {
-		charset += strconv.Itoa(i) // A-Z
+		charset += string(i) // A-Z
 	}
 	for i := 97; i <= 122; i++ {
-		charset += strconv.Itoa(i) // a-z
+		charset += string(i) // a-z
 	}
 	for i := 48; i <= 57; i++ {
-		charset += strconv.Itoa(i) // 0-9
+		charset += string(i) // 0-9
 	}
 	return charset
 }
@@ -36,8 +35,10 @@ func generateRandomPrefix() string {
 
 	for i := int64(0); i < n.Int64(); i++ {
 		randomIndex, _ := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
-		prefix += string(charset[randomIndex.Int64()])
+		prefix += string(charset[randomIndex.Int64()]) // Randomly pick characters from charset
 	}
+
+	fmt.Println(prefix)
 	return prefix
 }
 
