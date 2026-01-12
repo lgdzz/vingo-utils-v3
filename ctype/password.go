@@ -43,6 +43,13 @@ type PasswordObj struct {
 	TotpUrl       string            `json:"totpUrl,omitempty"`
 }
 
+type PasswordPublicObj struct {
+	PasswordLevel int               `json:"passwordLevel"`
+	CreatedAt     *moment.LocalTime `json:"createdAt,omitempty"`
+	IsTemp        bool              `json:"isTemp,omitempty"`
+	TotpLogin     bool              `json:"totpLogin,omitempty"` // 登录是否二次验证
+}
+
 // ========== GORM 接口 ==========
 
 func (s Password) Value() (driver.Value, error) {
@@ -251,4 +258,14 @@ func countTrue(flags ...bool) int {
 		}
 	}
 	return count
+}
+
+func (s Password) GetPasswordPublicObj() PasswordPublicObj {
+	o := s.getObj()
+	return PasswordPublicObj{
+		PasswordLevel: o.PasswordLevel,
+		CreatedAt:     o.CreatedAt,
+		IsTemp:        o.IsTemp,
+		TotpLogin:     o.TotpLogin,
+	}
 }
