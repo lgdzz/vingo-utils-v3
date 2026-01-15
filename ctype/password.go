@@ -33,14 +33,16 @@ const (
 type Password Ciphertext
 
 type PasswordObj struct {
-	PasswordLevel int               `json:"passwordLevel"`
-	PasswordMd5   string            `json:"passwordMd5"`
-	Salt          string            `json:"salt"`
-	CreatedAt     *moment.LocalTime `json:"createdAt,omitempty"`
-	IsTemp        bool              `json:"isTemp,omitempty"`
-	TotpLogin     bool              `json:"totpLogin,omitempty"` // 登录是否二次验证
-	TotpSecret    string            `json:"totpSecret,omitempty"`
-	TotpUrl       string            `json:"totpUrl,omitempty"`
+	PasswordLevel   int               `json:"passwordLevel"`
+	PasswordMd5     string            `json:"passwordMd5"`
+	Salt            string            `json:"salt"`
+	CreatedAt       *moment.LocalTime `json:"createdAt,omitempty"`
+	IsTemp          bool              `json:"isTemp,omitempty"`
+	TotpLogin       bool              `json:"totpLogin,omitempty"` // 登录是否二次验证
+	TotpSecret      string            `json:"totpSecret,omitempty"`
+	TotpUrl         string            `json:"totpUrl,omitempty"`
+	TotpIssuer      string            `json:"totpIssuer,omitempty"`
+	TotpAccountName string            `json:"totpAccountName,omitempty"`
 }
 
 type PasswordPublicObj struct {
@@ -128,6 +130,8 @@ func (s *Password) EnableTotp(issuer string, accountName string) {
 	}
 	obj.TotpSecret = key.Secret()
 	obj.TotpUrl = key.URL()
+	obj.TotpIssuer = issuer
+	obj.TotpAccountName = accountName
 	*s = mustMarshalPassword(obj)
 }
 
