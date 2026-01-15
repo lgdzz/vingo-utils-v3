@@ -46,10 +46,12 @@ type PasswordObj struct {
 }
 
 type PasswordPublicObj struct {
-	PasswordLevel int               `json:"passwordLevel"`
-	CreatedAt     *moment.LocalTime `json:"createdAt,omitempty"`
-	IsTemp        bool              `json:"isTemp,omitempty"`
-	TotpLogin     bool              `json:"totpLogin,omitempty"` // 登录是否二次验证
+	PasswordLevel   int               `json:"passwordLevel"`
+	CreatedAt       *moment.LocalTime `json:"createdAt,omitempty"`
+	IsTemp          bool              `json:"isTemp,omitempty"`
+	TotpLogin       bool              `json:"totpLogin,omitempty"` // 登录是否二次验证
+	TotpIssuer      string            `json:"totpIssuer,omitempty"`
+	TotpAccountName string            `json:"totpAccountName,omitempty"`
 }
 
 // ========== GORM 接口 ==========
@@ -267,9 +269,11 @@ func countTrue(flags ...bool) int {
 func (s Password) GetPasswordPublicObj() PasswordPublicObj {
 	o := s.getObj()
 	return PasswordPublicObj{
-		PasswordLevel: o.PasswordLevel,
-		CreatedAt:     o.CreatedAt,
-		IsTemp:        o.IsTemp,
-		TotpLogin:     o.TotpLogin,
+		PasswordLevel:   o.PasswordLevel,
+		CreatedAt:       o.CreatedAt,
+		IsTemp:          o.IsTemp,
+		TotpLogin:       o.TotpLogin,
+		TotpIssuer:      o.TotpIssuer,
+		TotpAccountName: o.TotpAccountName,
 	}
 }
