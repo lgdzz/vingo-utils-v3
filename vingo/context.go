@@ -243,6 +243,9 @@ func (c *Context) SetDataScope(value int) {
 func (c *Context) SetIsManageChannel(value bool) {
 	c.Set("isManageChannel", value)
 }
+func (c *Context) SetTempAccId(value int) {
+	c.Set("tempAccId", value)
+}
 
 func (c *Context) GetUserId() int {
 	return c.GetInt("userId")
@@ -292,6 +295,7 @@ func (c *Context) GetDataScope() int {
 func (c *Context) GetIsManageChannel() bool {
 	return c.GetBool("isManageChannel")
 }
+func (c *Context) GetTempAccId() int { return c.GetInt("tempAccId") }
 
 func (c *Context) getTexts(key string) []string {
 	value, exists := c.Get(key)
