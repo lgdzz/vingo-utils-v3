@@ -1,10 +1,11 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/lgdzz/vingo-utils-v3/vingo"
 )
 
 func BaseMiddle(hook *Hook) gin.HandlerFunc {

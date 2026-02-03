@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
-	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"strings"
 	"time"
+
+	"github.com/lgdzz/vingo-utils-v3/vingo"
 )
 
 type LocalTime time.Time
@@ -150,14 +151,14 @@ func (t LocalTime) AddDaysWithTime(days, hour, min, sec int) LocalTime {
 	return LocalTime(time.Date(y, m, d, hour, min, sec, 0, newTime.Location()))
 }
 
-// GTNow 当前时间>t
+// GtNow t>当前时间
 func (t LocalTime) GtNow() bool {
-	return time.Now().After(time.Time(t))
+	return time.Time(t).After(time.Now())
 }
 
-// LtNow 当前时间<t
+// LtNow t<当前时间
 func (t LocalTime) LtNow() bool {
-	return time.Time(t).After(time.Now())
+	return time.Now().After(time.Time(t))
 }
 
 // Gt t>o
