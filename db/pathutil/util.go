@@ -8,14 +8,15 @@ package pathutil
 
 import (
 	"fmt"
-	"github.com/duke-git/lancet/v2/pointer"
-	"github.com/duke-git/lancet/v2/strutil"
-	"github.com/lgdzz/vingo-utils-v3/db"
-	"gorm.io/gorm"
 	"reflect"
 	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/duke-git/lancet/v2/pointer"
+	"github.com/duke-git/lancet/v2/strutil"
+	"github.com/lgdzz/vingo-utils-v3/db"
+	"gorm.io/gorm"
 )
 
 // JoinField 自动拼接字段配置
@@ -107,7 +108,7 @@ func setPathOfChild[T any](model *T, option *Option) {
 	s := reflect.ValueOf(model).Elem()
 
 	var children []T
-	option.Tx.Find(&children, fmt.Sprintf("%v = ?", strutil.CamelCase(option.FieldPid)), getIDString(s, option.FieldId))
+	option.Tx.Find(&children, fmt.Sprintf("%v = ?", strutil.SnakeCase(option.FieldPid)), getIDString(s, option.FieldId))
 	for _, child := range children {
 		SetPathWithCreate[T](&child, model, option)
 		setPathOfChild[T](&child, option)
@@ -138,7 +139,7 @@ func SetPathWithCreate[T any](model *T, parent *T, option *Option) {
 	if hasParent(s, option.FieldPid) {
 		if parent == nil {
 			pid := getIDString(s, option.FieldPid)
-			parent = pointer.Of(db.Find[T](option.Tx, fmt.Sprintf("%v = ?", strutil.CamelCase(option.FieldId)), pid))
+			parent = pointer.Of(db.Find[T](option.Tx, fmt.Sprintf("%v = ?", strutil.SnakeCase(option.FieldId)), pid))
 		}
 		parentValue := reflect.ValueOf(parent).Elem()
 		path := fmt.Sprintf("%v,%v", getIDString(parentValue, option.FieldPath), getIDString(s, option.FieldId))
