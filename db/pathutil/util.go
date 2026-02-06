@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/duke-git/lancet/v2/pointer"
 	"github.com/duke-git/lancet/v2/strutil"
@@ -91,7 +90,8 @@ func upperFirst(s string) string {
 	if s == "" {
 		return ""
 	}
-	return strings.ToUpper(s[:1]) + s[1:]
+	return strutil.UpperFirst(strutil.CamelCase(s))
+	//return strings.ToUpper(s[:1]) + s[1:]
 }
 
 func lowerFirst(s string) string {
