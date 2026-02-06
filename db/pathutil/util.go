@@ -11,7 +11,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"unicode"
 
 	"github.com/duke-git/lancet/v2/pointer"
 	"github.com/duke-git/lancet/v2/strutil"
@@ -96,12 +95,13 @@ func upperFirst(s string) string {
 }
 
 func lowerFirst(s string) string {
-	if s == "" {
-		return s
-	}
-	runes := []rune(s)
-	runes[0] = unicode.ToLower(runes[0])
-	return string(runes)
+	return strutil.SnakeCase(s)
+	//if s == "" {
+	//	return s
+	//}
+	//runes := []rune(s)
+	//runes[0] = unicode.ToLower(runes[0])
+	//return string(runes)
 }
 
 func setPathOfChild[T any](model *T, option *Option) {
