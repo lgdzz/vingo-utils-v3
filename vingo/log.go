@@ -26,8 +26,16 @@ var (
 	flushTimer *time.Timer
 )
 
+var dstDir = "runtime/logs"
+var Enable = true
+
 func InitLogService() {
-	//Mkdir("runtime")
+	if _, err := os.Stat(dstDir); os.IsNotExist(err) {
+		if err = os.MkdirAll(dstDir, 0755); err != nil {
+			panic(err.Error())
+		}
+	}
+
 	filename = generateFilename()
 	err := createLogFile()
 	if err != nil {
@@ -40,7 +48,7 @@ func InitLogService() {
 
 func generateFilename() string {
 	now := time.Now().Local()
-	return fmt.Sprintf("runtime/log_%04d%02d%02d.log", now.Year(), now.Month(), now.Day())
+	return fmt.Sprintf("%v/log_%04d%02d%02d.log", dstDir, now.Year(), now.Month(), now.Day())
 }
 
 func createLogFile() error {
@@ -124,6 +132,9 @@ func writeLoop() {
 }
 
 func writeLog(message string) {
+	if !Enable {
+		return
+	}
 	mu.Lock()
 	buffer = append(buffer, message)
 	if len(buffer) >= bufferSize {
@@ -182,11 +193,10 @@ func LogError(message string) {
 
 // 获取日志文件列表
 func GetLogFiles() []string {
-	dir := "runtime"
 	var files []string
 
 	// Walk through the directory to find log files
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(dstDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -212,7 +222,6 @@ func GetLogFiles() []string {
 
 // 查询日志
 func FindLogs(source string, keyword string) []string {
-	dir := "runtime"
 	// Create a regex pattern for matching log records
 	regex := fmt.Sprintf(`.*%s`, keyword)
 	pattern := regexp.MustCompile(regex)
@@ -221,7 +230,7 @@ func FindLogs(source string, keyword string) []string {
 
 	if len(source) == 0 {
 		// Walk through the directory to find log files
-		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		err := filepath.Walk(dstDir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
