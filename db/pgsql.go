@@ -7,7 +7,15 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
+	"html/template"
+	"log"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/lgdzz/vingo-utils-v3/db/book"
@@ -15,12 +23,6 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"html/template"
-	"log"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
 func NewPgSql(config Config) *Api {
@@ -86,10 +88,18 @@ func (s *PgsqlAdapter) GetDatabaseName() (string, error) {
 }
 
 func (s *PgsqlAdapter) GetTableComment(dbName, tableName string) (string, error) {
-	var tableComment string
-	queryTableComment := `SELECT obj_description(c.oid, 'pg_class') FROM pg_class c WHERE relname = ?`
+	var tableComment sql.NullString
+	queryTableComment := `SELECT obj_description(c.oid, 'pg_class') 
+                          FROM pg_class c 
+                          WHERE relname = ?`
 	err := s.db.Raw(queryTableComment, tableName).Scan(&tableComment).Error
-	return tableComment, err
+	if err != nil {
+		return "", err
+	}
+	if tableComment.Valid {
+		return tableComment.String, nil
+	}
+	return "", nil // 表注释为空
 }
 
 func (s *PgsqlAdapter) GetColumns(tableName string) ([]Column, error) {
