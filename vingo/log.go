@@ -180,15 +180,15 @@ func Log(message string) {
 }
 
 func LogRequest(t string, message string) {
-	writeLog(fmt.Sprintf("[%v][REQUEST][%v] %v", time.Now().Format("2006-01-02 15:04:05"), t, message))
+	writeLog(fmt.Sprintf("[%s][REQUEST][%v] %s", time.Now().Format("2006-01-02 15:04:05"), t, strings.ReplaceAll(message, "\n", "@n@n@n")))
 }
 
 func LogInfo(message string) {
-	go writeLog(fmt.Sprintf("[%s][INFO] %s", time.Now().Format("2006-01-02 15:04:05"), message))
+	go writeLog(fmt.Sprintf("[%s][INFO][-] %s", time.Now().Format("2006-01-02 15:04:05"), strings.ReplaceAll(message, "\n", "@n@n@n")))
 }
 
 func LogError(message string) {
-	go writeLog(fmt.Sprintf("[%s][ERROR] %s", time.Now().Format("2006-01-02 15:04:05"), message))
+	go writeLog(fmt.Sprintf("[%s][ERROR][-] %s", time.Now().Format("2006-01-02 15:04:05"), strings.ReplaceAll(message, "\n", "@n@n@n")))
 }
 
 // 获取日志文件列表
