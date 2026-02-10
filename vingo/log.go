@@ -14,7 +14,6 @@ import (
 const (
 	bufferSize    = 1000
 	flushInterval = 5 * time.Second
-	maxAge        = 30 * 24 * time.Hour
 	maxTokenSize  = 1024 * 1024 * 10
 )
 
@@ -24,16 +23,21 @@ var (
 	file       *os.File
 	filename   string
 	flushTimer *time.Timer
+	maxAge     = 30 * 24 * time.Hour
 )
 
 var dstDir = "runtime/logs"
 var Enable = true
 
-func InitLogService() {
+func InitLogService(maxDay *int) {
 	if _, err := os.Stat(dstDir); os.IsNotExist(err) {
 		if err = os.MkdirAll(dstDir, 0755); err != nil {
 			panic(err.Error())
 		}
+	}
+
+	if maxDay != nil && *maxDay > 0 {
+		maxAge = time.Duration(*maxDay) * 24 * time.Hour
 	}
 
 	filename = generateFilename()
@@ -191,9 +195,14 @@ func LogError(message string) {
 	go writeLog(fmt.Sprintf("[%s][ERROR][-] %s", time.Now().Format("2006-01-02 15:04:05"), strings.ReplaceAll(message, "\n", "@n@n@n")))
 }
 
-// 获取日志文件列表
-func GetLogFiles() []string {
-	var files []string
+type LogFileItem struct {
+	Source string `json:"source"`
+	Size   int64  `json:"size"`
+}
+
+// GetLogFiles 获取日志文件列表
+func GetLogFiles() []LogFileItem {
+	var files []LogFileItem
 
 	// Walk through the directory to find log files
 	err := filepath.Walk(dstDir, func(path string, info os.FileInfo, err error) error {
@@ -208,7 +217,10 @@ func GetLogFiles() []string {
 
 		// Check if the file has a .log extension
 		if strings.HasSuffix(info.Name(), ".log") {
-			files = append(files, path)
+			files = append(files, LogFileItem{
+				Source: path,
+				Size:   info.Size(),
+			})
 		}
 
 		return nil
@@ -217,82 +229,96 @@ func GetLogFiles() []string {
 	if err != nil {
 		panic(err)
 	}
+
 	return files
 }
 
-// 查询日志
-func FindLogs(source string, keyword string) []string {
-	// Create a regex pattern for matching log records
+var (
+	timeLayout = "2006-01-02 15:04:05"
+	timeRegex  = regexp.MustCompile(`^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]`)
+)
+
+// FindLogs 查询日志
+func FindLogs(source string, keyword string, startTime string, endTime string) []string {
+	// keyword 正则
 	regex := fmt.Sprintf(`.*%s`, keyword)
 	pattern := regexp.MustCompile(regex)
 
+	// 解析时间范围
+	var (
+		start, end time.Time
+		hasStart   = startTime != ""
+		hasEnd     = endTime != ""
+	)
+
+	if hasStart {
+		start, _ = time.Parse(timeLayout, startTime)
+	}
+	if hasEnd {
+		end, _ = time.Parse(timeLayout, endTime)
+	}
+
 	var logs = make([]string, 0)
 
-	if len(source) == 0 {
-		// Walk through the directory to find log files
-		err := filepath.Walk(dstDir, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
+	readFile := func(path string) error {
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
 
-			// Skip directories
-			if info.IsDir() {
-				return nil
-			}
+		scanner := bufio.NewScanner(file)
+		scanner.Buffer(make([]byte, maxTokenSize), maxTokenSize)
 
-			// Open the log file
-			file, err := os.Open(path)
-			if err != nil {
-				return err
-			}
-			defer file.Close()
+		for scanner.Scan() {
+			line := scanner.Text()
 
-			// Read the log file line by line
-			scanner := bufio.NewScanner(file)
-			scanner.Buffer(make([]byte, maxTokenSize), maxTokenSize)
-			for scanner.Scan() {
-				line := scanner.Text()
-
-				// Check if the line matches the regex pattern
-				if pattern.MatchString(line) {
-					logs = append(logs, line)
+			// 1️⃣ 解析时间
+			match := timeRegex.FindStringSubmatch(line)
+			if len(match) == 2 {
+				logTime, err := time.Parse(timeLayout, match[1])
+				if err == nil {
+					// 时间范围过滤
+					if hasStart && logTime.Before(start) {
+						continue
+					}
+					if hasEnd && logTime.After(end) {
+						continue
+					}
 				}
 			}
 
-			if err := scanner.Err(); err != nil {
+			// 2️⃣ 关键字匹配
+			if keyword == "" || pattern.MatchString(line) {
+				logs = append(logs, line)
+			}
+		}
+
+		return scanner.Err()
+	}
+
+	if source == "" {
+		err := filepath.Walk(dstDir, func(path string, info os.FileInfo, err error) error {
+			if err != nil || info.IsDir() {
 				return err
 			}
-
-			return nil
+			return readFile(path)
 		})
-
 		if err != nil {
 			panic(err)
 		}
 	} else {
-		// Open the log file
-		file, err := os.Open(source)
-		if err != nil {
+		if err := readFile(source); err != nil {
 			panic(err)
-		}
-		defer file.Close()
-
-		// Read the log file line by line
-		scanner := bufio.NewScanner(file)
-		scanner.Buffer(make([]byte, maxTokenSize), maxTokenSize)
-		for scanner.Scan() {
-			line := scanner.Text()
-
-			// Check if the line matches the regex pattern
-			if pattern.MatchString(line) {
-				logs = append(logs, line)
-			}
 		}
 	}
 
-	// If keyword is not provided, return the latest 3 logs
-	if len(keyword) == 0 && len(logs) > 50 {
-		logs = logs[len(logs)-50:]
+	// keyword 为空时，只返回最近 1000 条
+	if keyword == "" && len(logs) > 1000 {
+		logs = logs[len(logs)-1000:]
+	} else if len(logs) > 10000 {
+		// 最多返回10000条
+		logs = logs[len(logs)-10000:]
 	}
 
 	return logs
