@@ -287,3 +287,45 @@ func SafeDivision(left float64, right float64) float64 {
 	}
 	return left / right
 }
+
+// DiffSlice 返回 oldSlice 中存在，但 newSlice 中不存在的元素
+func DiffSlice[T comparable](oldSlice, newSlice []T) []T {
+	if len(oldSlice) == 0 {
+		return nil
+	}
+
+	// 构建 newSlice 的 set
+	newSet := make(map[T]struct{}, len(newSlice))
+	for _, v := range newSlice {
+		newSet[v] = struct{}{}
+	}
+
+	// 找差集
+	result := make([]T, 0)
+	for _, v := range oldSlice {
+		if _, ok := newSet[v]; !ok {
+			result = append(result, v)
+		}
+	}
+
+	return result
+}
+
+// DiffByFunc 返回 oldList 中存在，但 newList 中不存在的指定字段元素
+func DiffByFunc[T any, K comparable](oldList, newList []T, keyFunc func(T) K) []K {
+	newSet := make(map[K]struct{}, len(newList))
+
+	for _, v := range newList {
+		newSet[keyFunc(v)] = struct{}{}
+	}
+
+	result := make([]K, 0)
+	for _, v := range oldList {
+		key := keyFunc(v)
+		if _, ok := newSet[key]; !ok {
+			result = append(result, key)
+		}
+	}
+
+	return result
+}
