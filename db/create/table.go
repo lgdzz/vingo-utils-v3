@@ -312,46 +312,79 @@ func mapGoType(t reflect.Type, tag reflect.StructTag, dbType DBType) string {
 	}
 
 	gormTag := tag.Get("gorm")
+
+	// JSON 序列化类型
 	if strings.Contains(gormTag, "serializer:json") {
 		return "VARCHAR(2000)"
 	}
 
 	typeName := t.String()
+
+	// -------------------------
+	// 自定义类型特殊处理
+	// -------------------------
 	switch typeName {
-	case "*moment.LocalTime", "moment.LocalTime":
+
+	case "moment.LocalTime":
 		if dbType == MySQL {
 			return "DATETIME"
 		}
 		return "TIMESTAMP"
+
 	case "ctype.Bool":
 		if dbType == MySQL {
 			return "TINYINT"
 		}
 		return "BOOLEAN"
+
+	case "ctype.Money":
+		// 金额类型，保留两位小数
+		if dbType == MySQL {
+			return "DECIMAL(18,2)"
+		}
+		return "NUMERIC(18,2)"
 	}
 
+	// -------------------------
+	// 标准类型
+	// -------------------------
 	switch t.Kind() {
+
 	case reflect.Int, reflect.Int32:
 		return "INTEGER"
+
 	case reflect.Int64:
 		return "BIGINT"
+
 	case reflect.String:
 		return "VARCHAR(255)"
+
 	case reflect.Bool:
 		if dbType == MySQL {
 			return "TINYINT"
 		}
 		return "BOOLEAN"
+
 	case reflect.Struct:
 		if t == reflect.TypeOf(time.Time{}) {
+			if dbType == MySQL {
+				return "DATETIME"
+			}
 			return "TIMESTAMP"
 		}
+
 		if t == reflect.TypeOf(gorm.DeletedAt{}) {
-			return "TIMESTAMP NULL"
+			if dbType == MySQL {
+				return "DATETIME"
+			}
+			return "TIMESTAMP"
 		}
+
+		// 其他 struct 统一 varchar
 		return "VARCHAR(2000)"
 	}
 
+	// 默认 fallback
 	return "VARCHAR(255)"
 }
 
