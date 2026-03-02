@@ -280,3 +280,15 @@ func GetYearFirstMoment(t time.Time) time.Time {
 func GetYearLastMoment(t time.Time) time.Time {
 	return GetYearFirstMoment(t).AddDate(1, 0, 0).Add(-time.Second)
 }
+
+// DiffDaysFromNow 获取传入时间与当前时间天数差
+func DiffDaysFromNow(t time.Time) int {
+	now := time.Now()
+
+	nowDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	targetDate := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+
+	diff := targetDate.Sub(nowDate)
+
+	return int(diff.Hours() / 24)
+}
