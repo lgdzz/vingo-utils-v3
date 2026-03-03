@@ -22,6 +22,8 @@ package vingo
 
 import (
 	"encoding/json"
+
+	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/duke-git/lancet/v2/slice"
 )
 
@@ -121,4 +123,61 @@ func (s *Tree[T]) item(list *[]map[string]any, id T, already *[]T) (result []map
 	}
 
 	return
+}
+
+// FindNodeFromTree 从树结构数据中查找指定节点
+func FindNodeFromTree(
+	tree []map[string]any,
+	target any,
+	keys ...string,
+) map[string]any {
+
+	// 默认值
+	idKey := "id"
+	childrenKey := "children"
+
+	// 覆盖默认值
+	if len(keys) > 0 && keys[0] != "" {
+		idKey = keys[0]
+	}
+	if len(keys) > 1 && keys[1] != "" {
+		childrenKey = keys[1]
+	}
+
+	targetStr := convertor.ToString(target)
+	var found map[string]any
+
+	var walk func(nodes []map[string]any)
+	walk = func(nodes []map[string]any) {
+		if found != nil {
+			return
+		}
+
+		for _, n := range nodes {
+			if n == nil {
+				continue
+			}
+
+			if convertor.ToString(n[idKey]) == targetStr {
+				found = n
+				return
+			}
+
+			// 兼容 children 两种结构
+			if ch, ok := n[childrenKey].([]map[string]any); ok {
+				walk(ch)
+			} else if ch2, ok := n[childrenKey].([]interface{}); ok {
+				childNodes := make([]map[string]any, 0, len(ch2))
+				for _, ci := range ch2 {
+					if m, ok := ci.(map[string]any); ok {
+						childNodes = append(childNodes, m)
+					}
+				}
+				walk(childNodes)
+			}
+		}
+	}
+
+	walk(tree)
+	return found
 }
