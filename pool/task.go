@@ -9,9 +9,10 @@ package pool
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/lgdzz/vingo-utils-v3/vingo"
-	"sync"
 )
 
 // TaskFunc 支持返回结果和错误的任务函数签名
@@ -32,6 +33,7 @@ type GoroutinePool struct {
 	wg         sync.WaitGroup
 	ctx        context.Context
 	cancel     context.CancelFunc
+	DataLock   sync.Mutex
 }
 
 // NewGoroutinePool 创建协程池，支持 context
