@@ -343,6 +343,9 @@ func mapGoType(t reflect.Type, tag reflect.StructTag, dbType DBType) string {
 			return "DECIMAL(18,2)"
 		}
 		return "NUMERIC(18,2)"
+
+	case "ctype.Text":
+		return "TEXT"
 	}
 
 	// -------------------------
