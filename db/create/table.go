@@ -19,10 +19,12 @@ const (
 	PGSQL DBType = "pgsql"
 )
 
-// -------------------------
+///////////////////////////////////////////////////////////
 // AST 解析字段注释
-// -------------------------
+///////////////////////////////////////////////////////////
+
 func ParseStructFieldComments(filePath string, structName string) (map[string]string, error) {
+
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, filePath, nil, parser.ParseComments)
 	if err != nil {
@@ -73,9 +75,10 @@ func ParseStructFieldComments(filePath string, structName string) (map[string]st
 	return result, nil
 }
 
-// -------------------------
+///////////////////////////////////////////////////////////
 // 生成 CREATE TABLE SQL
-// -------------------------
+///////////////////////////////////////////////////////////
+
 func GenerateCreateTableSQLList(model interface{}, filePath string, dbType DBType, tableName string, tableComment string) ([]string, error) {
 
 	t := reflect.TypeOf(model)
@@ -99,9 +102,10 @@ func GenerateCreateTableSQLList(model interface{}, filePath string, dbType DBTyp
 
 	seqName := fmt.Sprintf("%s_id_seq", tableName)
 
-	// -------------------------
-	// 表/序列 DROP
-	// -------------------------
+	///////////////////////////////////////////////////////////
+	// DROP
+	///////////////////////////////////////////////////////////
+
 	if dbType == PGSQL {
 
 		sqlList = append(sqlList, fmt.Sprintf(`
@@ -126,13 +130,13 @@ $$;`, seqName, seqName))
 	}
 
 	if dbType == MySQL {
-
 		sqlList = append(sqlList, fmt.Sprintf("DROP TABLE IF EXISTS `%s`;", tableName))
 	}
 
-	// -------------------------
+	///////////////////////////////////////////////////////////
 	// 列定义
-	// -------------------------
+	///////////////////////////////////////////////////////////
+
 	for i := 0; i < t.NumField(); i++ {
 
 		field := t.Field(i)
@@ -149,10 +153,6 @@ $$;`, seqName, seqName))
 
 		sqlType := mapGoType(field.Type, field.Tag, dbType)
 
-		if sqlType == "" {
-			continue
-		}
-
 		comment := fieldComments[field.Name]
 
 		colDef := fmt.Sprintf("  %s %s", wrapName(columnName, dbType), sqlType)
@@ -160,7 +160,6 @@ $$;`, seqName, seqName))
 		isDeletedAt := field.Type == reflect.TypeOf(gorm.DeletedAt{})
 		isPointer := field.Type.Kind() == reflect.Ptr
 
-		// NULL / NOT NULL
 		if !isDeletedAt {
 
 			if isPointer {
@@ -170,7 +169,6 @@ $$;`, seqName, seqName))
 			}
 		}
 
-		// 主键自增
 		if isPK {
 
 			primaryKeys = append(primaryKeys, columnName)
@@ -184,40 +182,44 @@ $$;`, seqName, seqName))
 			}
 		}
 
-		// MySQL 字段备注
 		if dbType == MySQL && comment != "" {
-
 			colDef += fmt.Sprintf(" COMMENT '%s'", escape(comment))
 		}
 
 		columns = append(columns, colDef)
 	}
 
-	// -------------------------
-	// CREATE TABLE
-	// -------------------------
-	createSQL := fmt.Sprintf("CREATE TABLE %s (\n%s\n);", wrapName(tableName, dbType), strings.Join(columns, ",\n"))
+	createSQL := fmt.Sprintf("CREATE TABLE %s (\n%s\n);",
+		wrapName(tableName, dbType),
+		strings.Join(columns, ",\n"))
 
 	sqlList = append(sqlList, createSQL)
 
-	// -------------------------
+	///////////////////////////////////////////////////////////
 	// 表注释
-	// -------------------------
+	///////////////////////////////////////////////////////////
+
 	if tableComment != "" {
 
 		if dbType == MySQL {
 
-			sqlList[len(sqlList)-1] = strings.TrimSuffix(sqlList[len(sqlList)-1], ";") + fmt.Sprintf(" COMMENT='%s';", escape(tableComment))
+			sqlList[len(sqlList)-1] =
+				strings.TrimSuffix(sqlList[len(sqlList)-1], ";") +
+					fmt.Sprintf(" COMMENT='%s';", escape(tableComment))
 
 		} else {
 
-			sqlList = append(sqlList, fmt.Sprintf("COMMENT ON TABLE %s IS '%s';", wrapName(tableName, dbType), escape(tableComment)))
+			sqlList = append(sqlList,
+				fmt.Sprintf("COMMENT ON TABLE %s IS '%s';",
+					wrapName(tableName, dbType),
+					escape(tableComment)))
 		}
 	}
 
-	// -------------------------
+	///////////////////////////////////////////////////////////
 	// PG 字段注释
-	// -------------------------
+	///////////////////////////////////////////////////////////
+
 	if dbType == PGSQL {
 
 		for i := 0; i < t.NumField(); i++ {
@@ -238,19 +240,21 @@ $$;`, seqName, seqName))
 
 			if comment != "" {
 
-				sqlList = append(sqlList, fmt.Sprintf(
-					"COMMENT ON COLUMN %s.%s IS '%s';",
-					wrapName(tableName, dbType),
-					wrapName(columnName, dbType),
-					escape(comment),
-				))
+				sqlList = append(sqlList,
+					fmt.Sprintf(
+						"COMMENT ON COLUMN %s.%s IS '%s';",
+						wrapName(tableName, dbType),
+						wrapName(columnName, dbType),
+						escape(comment),
+					))
 			}
 		}
 	}
 
-	// -------------------------
+	///////////////////////////////////////////////////////////
 	// 联合主键
-	// -------------------------
+	///////////////////////////////////////////////////////////
+
 	if len(primaryKeys) > 0 {
 
 		cols := make([]string, len(primaryKeys))
@@ -261,31 +265,161 @@ $$;`, seqName, seqName))
 
 		if dbType == PGSQL {
 
-			sqlList = append(sqlList, fmt.Sprintf(
-				"ALTER TABLE %s ADD CONSTRAINT %s_pk PRIMARY KEY (%s);",
-				wrapName(tableName, dbType),
-				tableName,
-				strings.Join(cols, ","),
-			))
+			sqlList = append(sqlList,
+				fmt.Sprintf(
+					"ALTER TABLE %s ADD CONSTRAINT %s_pk PRIMARY KEY (%s);",
+					wrapName(tableName, dbType),
+					tableName,
+					strings.Join(cols, ","),
+				))
 
 		} else {
 
-			sqlList = append(sqlList, fmt.Sprintf(
-				"ALTER TABLE `%s` ADD PRIMARY KEY (%s);",
-				tableName,
-				strings.Join(primaryKeys, ","),
-			))
+			sqlList = append(sqlList,
+				fmt.Sprintf(
+					"ALTER TABLE `%s` ADD PRIMARY KEY (%s);",
+					tableName,
+					strings.Join(primaryKeys, ","),
+				))
+		}
+	}
+
+	///////////////////////////////////////////////////////////
+	// ⭐⭐⭐ 恢复：索引生成 ⭐⭐⭐
+	///////////////////////////////////////////////////////////
+
+	type IndexInfo struct {
+		Name    string
+		Columns []string
+		Unique  bool
+	}
+
+	indexes := map[string]*IndexInfo{}
+
+	for i := 0; i < t.NumField(); i++ {
+
+		field := t.Field(i)
+
+		tag := field.Tag.Get("gorm")
+
+		if tag == "-" {
+			continue
+		}
+
+		columnName, _, _ := parseGormTag(field)
+
+		if columnName == "" {
+			columnName = toSnakeCase(field.Name)
+		}
+
+		for _, p := range strings.Split(tag, ";") {
+
+			p = strings.TrimSpace(p)
+
+			if p == "index" {
+
+				idxName := fmt.Sprintf("%s_%s_idx", tableName, columnName)
+
+				indexes[idxName] = &IndexInfo{
+					Name:    idxName,
+					Columns: []string{columnName},
+				}
+			}
+
+			if p == "unique" || p == "uniqueIndex" {
+
+				idxName := fmt.Sprintf("%s_%s_uindex", tableName, columnName)
+
+				indexes[idxName] = &IndexInfo{
+					Name:    idxName,
+					Columns: []string{columnName},
+					Unique:  true,
+				}
+			}
+
+			if strings.HasPrefix(p, "index:") ||
+				strings.HasPrefix(p, "uniqueIndex:") {
+
+				ps := strings.Split(p, ":")
+
+				if len(ps) == 2 {
+
+					name := ps[1]
+
+					indexes[name] = &IndexInfo{
+						Name:    name,
+						Columns: []string{columnName},
+						Unique:  strings.HasPrefix(p, "uniqueIndex:"),
+					}
+				}
+			}
+		}
+	}
+
+	for _, idx := range indexes {
+
+		colStr := make([]string, len(idx.Columns))
+
+		for i, c := range idx.Columns {
+			colStr[i] = wrapName(c, dbType)
+		}
+
+		if dbType == PGSQL {
+
+			if idx.Unique {
+
+				sqlList = append(sqlList,
+					fmt.Sprintf(
+						"CREATE UNIQUE INDEX %s ON %s (%s);",
+						idx.Name,
+						wrapName(tableName, dbType),
+						strings.Join(colStr, ","),
+					))
+
+			} else {
+
+				sqlList = append(sqlList,
+					fmt.Sprintf(
+						"CREATE INDEX %s ON %s (%s);",
+						idx.Name,
+						wrapName(tableName, dbType),
+						strings.Join(colStr, ","),
+					))
+			}
+
+		} else {
+
+			if idx.Unique {
+
+				sqlList = append(sqlList,
+					fmt.Sprintf(
+						"CREATE UNIQUE INDEX `%s` ON `%s` (%s);",
+						idx.Name,
+						tableName,
+						strings.Join(idx.Columns, ","),
+					))
+
+			} else {
+
+				sqlList = append(sqlList,
+					fmt.Sprintf(
+						"CREATE INDEX `%s` ON `%s` (%s);",
+						idx.Name,
+						tableName,
+						strings.Join(idx.Columns, ","),
+					))
+			}
 		}
 	}
 
 	return sqlList, nil
 }
 
-// -------------------------
-// 类型映射
-// -------------------------
-func mapGoType(t reflect.Type, tag reflect.StructTag, dbType DBType) string {
+///////////////////////////////////////////////////////////
+// 类型映射 / 工具函数（保持你的原样）
+///////////////////////////////////////////////////////////
 
+func mapGoType(t reflect.Type, tag reflect.StructTag, dbType DBType) string {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
@@ -377,9 +511,6 @@ func mapGoType(t reflect.Type, tag reflect.StructTag, dbType DBType) string {
 	return "VARCHAR(255)"
 }
 
-// -------------------------
-// 工具函数
-// -------------------------
 func parseGormTag(field reflect.StructField) (column string, isPK bool, skip bool) {
 
 	tag := field.Tag.Get("gorm")
@@ -388,17 +519,13 @@ func parseGormTag(field reflect.StructField) (column string, isPK bool, skip boo
 		return "", false, true
 	}
 
-	parts := strings.Split(tag, ";")
-
-	for _, p := range parts {
+	for _, p := range strings.Split(tag, ";") {
 
 		if strings.HasPrefix(p, "column:") {
-
 			column = strings.TrimPrefix(p, "column:")
 		}
 
 		if p == "primaryKey" {
-
 			isPK = true
 		}
 	}
@@ -407,11 +534,9 @@ func parseGormTag(field reflect.StructField) (column string, isPK bool, skip boo
 }
 
 func wrapName(name string, dbType DBType) string {
-
 	if dbType == MySQL {
 		return "`" + name + "`"
 	}
-
 	return `"` + name + `"`
 }
 
@@ -420,12 +545,9 @@ func toSnakeCase(str string) string {
 	var result []rune
 
 	for i, r := range str {
-
 		if i > 0 && r >= 'A' && r <= 'Z' {
-
 			result = append(result, '_')
 		}
-
 		result = append(result, r)
 	}
 
@@ -433,9 +555,12 @@ func toSnakeCase(str string) string {
 }
 
 func escape(s string) string {
-
 	return strings.ReplaceAll(s, "'", "''")
 }
+
+///////////////////////////////////////////////////////////
+// 执行
+///////////////////////////////////////////////////////////
 
 func CreateTable(tx *gorm.DB, model interface{}, tableName string, tableComment string, filePath string, dbType string) {
 
@@ -452,7 +577,6 @@ func CreateTable(tx *gorm.DB, model interface{}, tableName string, tableComment 
 	}
 
 	for _, stmt := range sqlList {
-
 		if err := tx.Exec(stmt).Error; err != nil {
 			panic(err)
 		}

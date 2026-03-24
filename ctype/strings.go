@@ -45,7 +45,11 @@ func (s *Strings[T]) Scan(value any) error {
 	parts := strings.Split(str, ",")
 	result := make([]T, 0, len(parts))
 	for _, part := range parts {
-		result = append(result, parsePrimitive[T](strings.TrimSpace(part)))
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue // 跳过空值
+		}
+		result = append(result, parsePrimitive[T](part))
 	}
 	*s = result
 	return nil
