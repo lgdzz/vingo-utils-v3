@@ -8,10 +8,12 @@ package ctype
 
 import (
 	"fmt"
-	"github.com/duke-git/lancet/v2/convertor"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/duke-git/lancet/v2/convertor"
+	"github.com/lgdzz/vingo-utils-v3/vingo"
 )
 
 const (
@@ -47,12 +49,13 @@ func (s IdCard) Analysis() IdCardInfo {
 	now := time.Now()
 	thisMonth, _ := convertor.ToInt(now.Format("01"))
 	info := IdCardInfo{IdCard: id, RegionCode: id[:6]}
-	year, _ := convertor.ToInt(id[6:10])
-	month, _ := convertor.ToInt(id[10:12])
+	year := id[6:10]
+	month := id[10:12]
 	day := id[12:14]
 	info.Birthday = fmt.Sprintf("%v-%v-%v", year, month, day)
-	info.UniformAge = now.Year() - int(year)
-	if int(thisMonth) < int(month) {
+
+	info.UniformAge = now.Year() - vingo.ToInt(year)
+	if int(thisMonth) < vingo.ToInt(strings.TrimLeft(month, "0")) {
 		info.Age = info.UniformAge - 1
 	} else {
 		info.Age = info.UniformAge
