@@ -18,10 +18,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/lgdzz/vingo-utils-v3/moment"
-	"gorm.io/gorm"
 	"reflect"
 	"strings"
+
+	"github.com/lgdzz/vingo-utils-v3/moment"
+	"gorm.io/gorm"
 )
 
 type Common struct {
@@ -273,8 +274,15 @@ func (s *Common) QueryWhereBetween(db *gorm.DB, input Between[float64], column s
 func (s *Common) QueryWhereDate(db *gorm.DB, input moment.DateTextRange, column string) *gorm.DB {
 	db = s.QueryDb(db)
 	if input != "" {
-		a, b := input.ToStruct().BetweenText()
-		db = db.Where(fmt.Sprintf("%v BETWEEN ? AND ?", column), a, b)
+		start, end := input.ToBetween()
+		switch {
+		case start != nil && end != nil:
+			db = db.Where(fmt.Sprintf("%v BETWEEN ? AND ?", column), start.ToTime().Format(moment.DateTimeFormat), end.ToTime().Format(moment.DateTimeFormat))
+		case start != nil:
+			db = db.Where(fmt.Sprintf("%v > ?", column), start.ToTime().Format(moment.DateTimeFormat))
+		case end != nil:
+			db = db.Where(fmt.Sprintf("%v < ?", column), end.ToTime().Format(moment.DateTimeFormat))
+		}
 	}
 	return db
 }
