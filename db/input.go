@@ -7,9 +7,10 @@
 package db
 
 import (
-	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"strconv"
 	"strings"
+
+	"github.com/lgdzz/vingo-utils-v3/vingo"
 )
 
 // TextSlice 文本切片字符串形态，如：a,b,c
@@ -152,6 +153,23 @@ func (s *Between[T]) Between() (T, T) {
 		panic("范围字符串格式错误，正确格式：1,100")
 	}
 	return convertToT[T](strings.TrimSpace(arr[0])), convertToT[T](strings.TrimSpace(arr[1]))
+}
+
+// BetweenNil 将逗号分隔的字符串转换为起始和结束值
+func (s *Between[T]) BetweenNil() (*T, *T) {
+	arr := strings.Split(string(*s), ",")
+	if len(arr) != 2 {
+		panic("范围字符串格式错误，正确格式：1,100")
+	}
+	var start *T
+	if arr[0] != "" {
+		start = vingo.Of(convertToT[T](strings.TrimSpace(arr[0])))
+	}
+	var end *T
+	if arr[1] != "" {
+		end = vingo.Of(convertToT[T](strings.TrimSpace(arr[1])))
+	}
+	return start, end
 }
 
 // convertToT 将字符串转换为指定类型 T

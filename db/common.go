@@ -264,8 +264,15 @@ func (s *Common) QueryWhereNotIn(db *gorm.DB, input TextSlice, column string) *g
 func (s *Common) QueryWhereBetween(db *gorm.DB, input Between[float64], column string) *gorm.DB {
 	db = s.QueryDb(db)
 	if input != "" {
-		a, b := input.Between()
-		db = db.Where(fmt.Sprintf("%v BETWEEN ? AND ?", column), a, b)
+		start, end := input.BetweenNil()
+		switch {
+		case start != nil && end != nil:
+			db = db.Where(fmt.Sprintf("%v BETWEEN ? AND ?", column), *start, *end)
+		case start != nil:
+			db = db.Where(fmt.Sprintf("%v > ?", column), *start)
+		case end != nil:
+			db = db.Where(fmt.Sprintf("%v < ?", column), *end)
+		}
 	}
 	return db
 }
