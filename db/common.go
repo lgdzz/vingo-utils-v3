@@ -267,11 +267,11 @@ func (s *Common) QueryWhereBetween(db *gorm.DB, input Between[float64], column s
 		start, end := input.BetweenNil()
 		switch {
 		case start != nil && end != nil:
-			db = db.Where(fmt.Sprintf("%v BETWEEN ? AND ?", column), *start, *end)
+			db = db.Where(fmt.Sprintf("%v BETWEEN %v AND %v", column, *start, *end))
 		case start != nil:
-			db = db.Where(fmt.Sprintf("%v > ?", column), *start)
+			db = db.Where(fmt.Sprintf("%v > %v", column, *start))
 		case end != nil:
-			db = db.Where(fmt.Sprintf("%v < ?", column), *end)
+			db = db.Where(fmt.Sprintf("%v < %v", column, *end))
 		}
 	}
 	return db
