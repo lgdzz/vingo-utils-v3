@@ -47,7 +47,7 @@ func (s MinIOAdapter) ObjectUrl(objectName string) string {
 	if s.Config.Private {
 		return s.privateUrl(objectName)
 	}
-	return strings.TrimRight(s.Config.Domain, "/") + "/" + s.Config.Bucket + "/" + objectName
+	return strings.TrimRight(s.Config.Domain, "/") + "/" + objectName
 }
 
 func (s MinIOAdapter) UploadSign(objectName string) any {
