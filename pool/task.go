@@ -161,7 +161,7 @@ func (s *GoroutinePool) FastSubmit(handle func() any, index ...int) {
 
 // FastSubmitLock 快速提交协程任务（带锁）
 // 如果是for循环协程任务可用index排序，默认-1，不排序
-func (s *GoroutinePool) FastSubmitLock(value any, handle func() any, index ...int) {
+func (s *GoroutinePool) FastSubmitLock(handle func() any, setData func(any), index ...int) {
 	s.Submit(func(ctx context.Context) Result {
 		var i = -1
 		if len(index) > 0 {
@@ -170,7 +170,7 @@ func (s *GoroutinePool) FastSubmitLock(value any, handle func() any, index ...in
 		return BusinessHandle(nil, i, func(object any) any {
 			res := handle()
 			s.DataLock.Lock()
-			value = res
+			setData(res)
 			defer s.DataLock.Unlock()
 			return res
 		})
