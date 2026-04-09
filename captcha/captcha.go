@@ -21,9 +21,16 @@ type Captcha struct {
 	Length int
 	Driver string
 	Store  *RedisStore
+
+	Click *ClickCaptcha
 }
 
 func NewCaptcha(api *redis.Api, enable bool) Captcha {
+	clickCaptcha := &ClickCaptcha{
+		Redis: api,
+	}
+	clickCaptcha.InitClick()
+	
 	return Captcha{
 		Enable: enable,
 		Length: 5,
@@ -33,6 +40,7 @@ func NewCaptcha(api *redis.Api, enable bool) Captcha {
 			Prefix: "captcha:",
 			Expire: time.Minute * 5,
 		},
+		Click: clickCaptcha,
 	}
 }
 

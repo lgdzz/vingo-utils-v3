@@ -25,9 +25,7 @@ type ClickCaptcha struct {
 	Redis *redis.Api
 }
 
-var clickCaptcha ClickCaptcha
-
-func InitClick(redis *redis.Api) {
+func (s *ClickCaptcha) InitClick() {
 	builder := click.NewBuilder()
 
 	// fonts
@@ -48,11 +46,10 @@ func InitClick(redis *redis.Api) {
 		click.WithBackgrounds(imgs),
 	)
 
-	clickCaptcha.Click = builder.Make()
-	clickCaptcha.Redis = redis
+	s.Click = builder.Make()
 }
 
-type CaptchaInput struct {
+type ClickInput struct {
 	Key  string      `json:"key"`
 	Code []click.Dot `json:"code"`
 }
@@ -88,7 +85,7 @@ func (s *ClickCaptcha) Generate(c *vingo.Context) {
 	})
 }
 
-func (s *ClickCaptcha) Check(input CaptchaInput) bool {
+func (s *ClickCaptcha) Check(input ClickInput) bool {
 	var dots map[int]*click.Dot
 	if !s.Redis.Get(input.Key, &dots) {
 		panic("验证码已失效")
