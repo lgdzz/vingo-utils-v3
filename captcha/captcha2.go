@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/golang/freetype/truetype"
+	"github.com/lgdzz/vingo-utils-v3/redis"
 	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"github.com/wenlng/go-captcha-assets/bindata/chars"
 	"github.com/wenlng/go-captcha-assets/resources/fonts/fzshengsksjw"
@@ -19,7 +20,14 @@ import (
 	"github.com/wenlng/go-captcha/v2/click"
 )
 
-func init() {
+type ClickCaptcha struct {
+	Click click.Captcha
+	Redis *redis.Api
+}
+
+var clickCaptcha ClickCaptcha
+
+func InitClick(redis *redis.Api) {
 	builder := click.NewBuilder()
 
 	// fonts
@@ -40,7 +48,8 @@ func init() {
 		click.WithBackgrounds(imgs),
 	)
 
-	global.CaptchaClick = builder.Make()
+	clickCaptcha.Click = builder.Make()
+	clickCaptcha.Redis = redis
 }
 
 type CaptchaInput struct {
@@ -48,8 +57,8 @@ type CaptchaInput struct {
 	Code []click.Dot `json:"code"`
 }
 
-func (s *CaptchaModule) Generate(c *vingo.Context) {
-	captData, err := global.CaptchaClick.Generate()
+func (s *ClickCaptcha) Generate(c *vingo.Context) {
+	captData, err := s.Click.Generate()
 	if err != nil {
 		panic(err)
 	}
@@ -60,7 +69,7 @@ func (s *CaptchaModule) Generate(c *vingo.Context) {
 	}
 
 	var key = fmt.Sprintf("captcha:%s", vingo.GetUUID())
-	global.Redis.Set(key, dotData, time.Minute*5)
+	s.Redis.Set(key, dotData, time.Minute*5)
 
 	var mBase64, tBase64 string
 	mBase64, err = captData.GetMasterImage().ToBase64()
@@ -79,9 +88,9 @@ func (s *CaptchaModule) Generate(c *vingo.Context) {
 	})
 }
 
-func (s *CaptchaModule) Check(input CaptchaInput) bool {
+func (s *ClickCaptcha) Check(input CaptchaInput) bool {
 	var dots map[int]*click.Dot
-	if !global.Redis.Get(input.Key, &dots) {
+	if !s.Redis.Get(input.Key, &dots) {
 		panic("验证码已失效")
 	}
 	for _, dot := range input.Code {
