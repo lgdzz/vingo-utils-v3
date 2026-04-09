@@ -11,7 +11,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+
 	"github.com/duke-git/lancet/v2/cryptor"
+	local_cryptor "github.com/lgdzz/vingo-utils-v3/cryptor"
 )
 
 var Secret []byte // 请确保为 16/24/32 字节的安全 key
@@ -90,4 +92,12 @@ func (s *Ciphertext) UnmarshalJSON(b []byte) error {
 
 func (s Ciphertext) String() string {
 	return string(s)
+}
+
+func TextEncode(text string) string {
+	return local_cryptor.TextEncode(text, Secret)
+}
+
+func TextDecode(text string) string {
+	return local_cryptor.TextDecode(text, Secret)
 }

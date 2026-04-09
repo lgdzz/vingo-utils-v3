@@ -282,3 +282,15 @@ func (s *PgsqlAdapter) QueryWhereFindInSet(db *gorm.DB, input TextSlice, column 
 func (s *PgsqlAdapter) JsonExtract(column string, key string) string {
 	return fmt.Sprintf("(%v->>'%v')::numeric", column, key)
 }
+
+func (s *PgsqlAdapter) CountWithCondition(condition string) string {
+	return fmt.Sprintf("COUNT(*) FILTER (WHERE %s)", condition)
+}
+
+func (s *PgsqlAdapter) SumWithCondition(condition string, column string) string {
+	return fmt.Sprintf("SUM(%s) FILTER (WHERE %s)", column, condition)
+}
+
+func (s *PgsqlAdapter) AvgWithCondition(condition string, column string) string {
+	return fmt.Sprintf("AVG(%s) FILTER (WHERE %s)", column, condition)
+}

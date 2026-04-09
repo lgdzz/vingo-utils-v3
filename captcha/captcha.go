@@ -8,10 +8,11 @@ package captcha
 
 import (
 	"fmt"
-	"github.com/lgdzz/vingo-utils-v3/redis"
-	"github.com/mojocn/base64Captcha"
 	"log"
 	"time"
+
+	"github.com/lgdzz/vingo-utils-v3/redis"
+	"github.com/mojocn/base64Captcha"
 )
 
 type Captcha struct {

@@ -19,5 +19,10 @@ type Adapter interface {
 	ModelFiles(tableNames ...string) (bool, error) // 模型文件
 
 	QueryWhereFindInSet(db *gorm.DB, query TextSlice, column string) *gorm.DB
+	
 	JsonExtract(column string, key string) string // 提取json字段做为字段
+
+	CountWithCondition(condition string) string
+	SumWithCondition(condition string, column string) string
+	AvgWithCondition(condition string, column string) string
 }

@@ -7,8 +7,9 @@
 package captcha
 
 import (
-	"github.com/go-redis/redis"
 	"time"
+
+	"github.com/go-redis/redis"
 )
 
 type RedisStore struct {

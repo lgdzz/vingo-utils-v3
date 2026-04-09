@@ -8,6 +8,13 @@ package db
 
 import (
 	"fmt"
+	"html/template"
+	"log"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/duke-git/lancet/v2/strutil"
 	"github.com/lgdzz/vingo-utils-v3/db/book"
@@ -15,12 +22,6 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"html/template"
-	"log"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
 // 新建一个数据库连接池
@@ -246,4 +247,16 @@ func (s *MysqlAdapter) QueryWhereFindInSet(db *gorm.DB, input TextSlice, column 
 
 func (s *MysqlAdapter) JsonExtract(column string, key string) string {
 	return fmt.Sprintf("JSON_EXTRACT(%v,'$.%v')", column, key)
+}
+
+func (s *MysqlAdapter) CountWithCondition(condition string) string {
+	return fmt.Sprintf("SUM(CASE WHEN %s THEN 1 ELSE 0 END)", condition)
+}
+
+func (s *MysqlAdapter) SumWithCondition(condition string, column string) string {
+	return fmt.Sprintf("SUM(CASE WHEN %s THEN %s ELSE 0 END)", condition, column)
+}
+
+func (s *MysqlAdapter) AvgWithCondition(condition string, column string) string {
+	return fmt.Sprintf("AVG(CASE WHEN %s THEN %s END)", condition, column)
 }
