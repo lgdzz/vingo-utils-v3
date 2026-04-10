@@ -85,7 +85,7 @@ func (s *ClickCaptcha) Generate(c *vingo.Context) {
 	})
 }
 
-func (s *ClickCaptcha) Check(input ClickInput) bool {
+func (s *ClickCaptcha) Verify(input ClickInput) bool {
 	var dots map[int]*click.Dot
 	if !s.Redis.Get(input.Key, &dots) {
 		panic("验证码已失效")
