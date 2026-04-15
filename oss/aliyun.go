@@ -92,8 +92,8 @@ func (s AliYunAdapter) Delete(objectName string) error {
 
 func (s AliYunAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {}
 
-func (s AliYunAdapter) GetImageBase64(path string) string {
-	data := request.Get(s.ObjectUrl(path), request.Option{})
+func (s AliYunAdapter) GetImageBase64(objectName string) string {
+	data := request.Get(s.ObjectUrl(objectName), request.Option{})
 	base64Str := base64.StdEncoding.EncodeToString(data)
 	return "data:image/png;base64," + base64Str
 }

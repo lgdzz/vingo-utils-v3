@@ -88,8 +88,8 @@ func (s QiNiuAdapter) bucketManager() *objects.Bucket {
 
 func (s QiNiuAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {}
 
-func (s QiNiuAdapter) GetImageBase64(path string) string {
-	data := request.Get(s.ObjectUrl(path), request.Option{})
+func (s QiNiuAdapter) GetImageBase64(objectName string) string {
+	data := request.Get(s.ObjectUrl(objectName), request.Option{})
 	base64Str := base64.StdEncoding.EncodeToString(data)
 	return "data:image/png;base64," + base64Str
 }
