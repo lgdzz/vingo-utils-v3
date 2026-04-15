@@ -11,6 +11,11 @@ type Api struct {
 	Adapter
 }
 
+func (*Api) GetImageBase64(objectName string) string {
+	//TODO implement me
+	panic("implement me")
+}
+
 const (
 	MinioOss  = "minio"
 	QiniuOss  = "qiniu"

@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lgdzz/vingo-utils-v3/request"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -102,6 +103,12 @@ func (s MinIOAdapter) UploadBase64(objectName string, contentType string, fileBa
 	if err != nil {
 		panic(err.Error())
 	}
+}
+
+func (s MinIOAdapter) GetImageBase64(path string) string {
+	data := request.Get(s.ObjectUrl(path), request.Option{})
+	base64Str := base64.StdEncoding.EncodeToString(data)
+	return "data:image/png;base64," + base64Str
 }
 
 func (s MinIOAdapter) Client() any {
