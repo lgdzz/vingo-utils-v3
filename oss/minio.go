@@ -33,10 +33,14 @@ type MinIOAdapter struct {
 
 func NewMinIOAdapter(config *Config) *MinIOAdapter {
 
-	client, err := minio.New(config.Endpoint, &minio.Options{
+	options := minio.Options{
 		Creds:  credentials.NewStaticV4(config.AccessKey, config.SecretKey, ""),
 		Secure: config.UseSSL,
-	})
+	}
+	if config.Transport != nil {
+		options.Transport = *config.Transport
+	}
+	client, err := minio.New(config.Endpoint, &options)
 	if err != nil {
 		panic(fmt.Sprintf("MinIO初始化异常：%v", err.Error()))
 	}

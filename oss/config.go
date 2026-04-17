@@ -6,6 +6,8 @@
 
 package oss
 
+import "net/http"
+
 type Config struct {
 	Endpoint    string `yaml:"endpoint" json:"endpoint"`       // 接口节点
 	AccessKey   string `yaml:"accessKey" json:"accessKey"`     // 接口key
@@ -18,6 +20,8 @@ type Config struct {
 	Driver      string `yaml:"driver" json:"driver"`           // 驱动：minio|qiniu|aliyun
 	Private     bool   `yaml:"private" json:"private"`         // 私有空间
 	Debug       bool   `yaml:"debug" json:"debug"`
+
+	Transport *http.RoundTripper
 }
 
 func (s *Config) StringValue(value *string, defaultValue string) {
