@@ -74,6 +74,7 @@ func (s MinIOAdapter) UploadSign(objectName string) any {
 	return map[string]any{
 		"policy": formData,
 		"url":    url.String(),
+		"domain": s.Config.Domain,
 	}
 }
 
