@@ -14,12 +14,16 @@ import (
 	"github.com/lgdzz/vingo-utils-v3/vingo"
 )
 
-type LoginLog struct {
-	LastTime *moment.LocalTime `json:"lastTime"`
-	LastIP   *IP               `json:"lastIP"`
+var ActiveLoginDay = 7
 
-	CurrentTime *moment.LocalTime `json:"currentTime"`
-	CurrentIP   *IP               `json:"currentIP"`
+type LoginRecord struct {
+	Time moment.LocalTime `json:"time"`
+	IP   IP               `json:"ip"`
+}
+
+type LoginLog struct {
+	Last    *LoginRecord `json:"last"`
+	Current *LoginRecord `json:"current"`
 }
 
 func (s *LoginLog) Value() (driver.Value, error) {
@@ -51,9 +55,16 @@ func (s *LoginLog) Scan(value any) error {
 	return nil
 }
 
+// Modify 更新记录
 func (s *LoginLog) Modify(ip string) {
-	s.LastTime = s.CurrentTime
-	s.LastIP = s.CurrentIP
-	s.CurrentTime = moment.NowLocalTime()
-	s.CurrentIP = vingo.Of(IP(ip))
+	s.Last = s.Current
+	s.Current = &LoginRecord{
+		Time: *moment.NowLocalTime(),
+		IP:   IP(ip),
+	}
+}
+
+// IsActive 是否活跃
+func (s *LoginLog) IsActive() bool {
+	return s != nil && s.Current != nil && s.Current.Time.AddDays(ActiveLoginDay).GtNow()
 }
