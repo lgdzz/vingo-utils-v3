@@ -110,8 +110,16 @@ func (s MinIOAdapter) UploadBase64(objectName string, contentType string, fileBa
 	}
 }
 
+func (s MinIOAdapter) objectUrl(objectName string) string {
+	// 如果有内网地址，则使用内网地址访问（MinIO）
+	if s.Config.Intranet != "" {
+		return fmt.Sprintf("http://%v/%v/%v", s.Config.Intranet, s.Config.Bucket, objectName)
+	}
+	return s.ObjectUrl(objectName)
+}
+
 func (s MinIOAdapter) GetImageBase64(objectName string) string {
-	data := request.Get(s.ObjectUrl(objectName), request.Option{})
+	data := request.Get(s.objectUrl(objectName), request.Option{})
 	base64Str := base64.StdEncoding.EncodeToString(data)
 	return "data:image/png;base64," + base64Str
 }

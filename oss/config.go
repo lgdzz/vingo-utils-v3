@@ -10,6 +10,7 @@ import "net/http"
 
 type Config struct {
 	Endpoint    string `yaml:"endpoint" json:"endpoint"`       // 接口节点
+	Intranet    string `yaml:"intranet" json:"intranet"`       // 内网节点（MinIO）
 	AccessKey   string `yaml:"accessKey" json:"accessKey"`     // 接口key
 	SecretKey   string `yaml:"secretKey" json:"secretKey"`     // 接口密钥
 	Bucket      string `yaml:"bucket" json:"bucket"`           // 存储桶
