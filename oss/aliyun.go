@@ -42,6 +42,9 @@ func NewAliYunAdapter(config *Config) *AliYunAdapter {
 }
 
 func (s AliYunAdapter) ObjectUrl(objectName string) string {
+	if strings.HasPrefix(objectName, "http") {
+		return objectName
+	}
 	if s.Config.Private {
 
 		result, err := s.client.Presign(context.TODO(), &aliyun.GetObjectRequest{

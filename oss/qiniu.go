@@ -8,6 +8,7 @@ package oss
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/qiniu/go-sdk/v7/storage"
@@ -37,6 +38,9 @@ func NewQiNiuAdapter(config *Config) *QiNiuAdapter {
 }
 
 func (s QiNiuAdapter) ObjectUrl(objectName string) string {
+	if strings.HasPrefix(objectName, "http") {
+		return objectName
+	}
 	if s.Config.Private {
 		return storage.MakePrivateURL(s.newMac(), s.Domain, objectName, 3600)
 	}

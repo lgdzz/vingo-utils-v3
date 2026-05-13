@@ -48,6 +48,9 @@ func NewMinIOAdapter(config *Config) *MinIOAdapter {
 }
 
 func (s MinIOAdapter) ObjectUrl(objectName string) string {
+	if strings.HasPrefix(objectName, "http") {
+		return objectName
+	}
 	if s.Config.Private {
 		return s.privateUrl(objectName)
 	}
