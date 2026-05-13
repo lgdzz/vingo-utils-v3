@@ -14,17 +14,11 @@ import (
 	"github.com/lgdzz/vingo-utils-v3/vingo"
 )
 
-func GetImageBase64(addr string, timeout ...int) string {
-	t := vingo.Of(60)
-	if len(timeout) > 0 {
-		t = vingo.Of(timeout[0])
-	}
-	data := request.Get(addr, request.Option{Timeout: t})
-	base64Str := base64.StdEncoding.EncodeToString(data)
-	return "data:image/png;base64," + base64Str
+func GetImageBase64(addr string, timeout ...int) (string, string) {
+	return GetBase64(addr, timeout...)
 }
 
-func GetBase64(addr string, timeout ...int) string {
+func GetBase64(addr string, timeout ...int) (string, string) {
 	t := vingo.Of(60)
 	if len(timeout) > 0 {
 		t = vingo.Of(timeout[0])
@@ -32,5 +26,5 @@ func GetBase64(addr string, timeout ...int) string {
 	data := request.Get(addr, request.Option{Timeout: t})
 	mimeType := http.DetectContentType(data)
 	base64Str := base64.StdEncoding.EncodeToString(data)
-	return "data:" + mimeType + ";base64," + base64Str
+	return "data:" + mimeType + ";base64," + base64Str, mimeType
 }

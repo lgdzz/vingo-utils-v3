@@ -181,11 +181,11 @@ func (s MinIOAdapter) objectUrl(objectName string) string {
 	return s.ObjectUrl(objectName)
 }
 
-func (s MinIOAdapter) GetImageBase64(objectName string, timeout ...int) string {
+func (s MinIOAdapter) GetImageBase64(objectName string, timeout ...int) (string, string) {
 	return GetImageBase64(s.ObjectUrl(objectName), timeout...)
 }
 
-func (s MinIOAdapter) GetBase64(objectName string, timeout ...int) string {
+func (s MinIOAdapter) GetBase64(objectName string, timeout ...int) (string, string) {
 	return GetBase64(s.ObjectUrl(objectName), timeout...)
 }
 

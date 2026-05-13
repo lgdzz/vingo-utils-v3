@@ -90,11 +90,11 @@ func (s QiNiuAdapter) bucketManager() *objects.Bucket {
 
 func (s QiNiuAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {}
 
-func (s QiNiuAdapter) GetImageBase64(objectName string, timeout ...int) string {
+func (s QiNiuAdapter) GetImageBase64(objectName string, timeout ...int) (string, string) {
 	return GetImageBase64(s.ObjectUrl(objectName), timeout...)
 }
 
-func (s QiNiuAdapter) GetBase64(objectName string, timeout ...int) string {
+func (s QiNiuAdapter) GetBase64(objectName string, timeout ...int) (string, string) {
 	return GetBase64(s.ObjectUrl(objectName), timeout...)
 }
 

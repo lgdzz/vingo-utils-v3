@@ -93,11 +93,11 @@ func (s AliYunAdapter) Delete(objectName string) error {
 
 func (s AliYunAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {}
 
-func (s AliYunAdapter) GetImageBase64(objectName string, timeout ...int) string {
+func (s AliYunAdapter) GetImageBase64(objectName string, timeout ...int) (string, string) {
 	return GetImageBase64(s.ObjectUrl(objectName), timeout...)
 }
 
-func (s AliYunAdapter) GetBase64(objectName string, timeout ...int) string {
+func (s AliYunAdapter) GetBase64(objectName string, timeout ...int) (string, string) {
 	return GetBase64(s.ObjectUrl(objectName), timeout...)
 }
 
