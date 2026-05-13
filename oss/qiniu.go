@@ -8,10 +8,8 @@ package oss
 
 import (
 	"context"
-	"encoding/base64"
 	"time"
 
-	"github.com/lgdzz/vingo-utils-v3/request"
 	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/qiniu/go-sdk/v7/storagev2/credentials"
 	"github.com/qiniu/go-sdk/v7/storagev2/http_client"
@@ -88,10 +86,12 @@ func (s QiNiuAdapter) bucketManager() *objects.Bucket {
 
 func (s QiNiuAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {}
 
-func (s QiNiuAdapter) GetImageBase64(objectName string) string {
-	data := request.Get(s.ObjectUrl(objectName), request.Option{})
-	base64Str := base64.StdEncoding.EncodeToString(data)
-	return "data:image/png;base64," + base64Str
+func (s QiNiuAdapter) GetImageBase64(objectName string, timeout ...int) string {
+	return GetImageBase64(s.ObjectUrl(objectName), timeout...)
+}
+
+func (s QiNiuAdapter) GetBase64(objectName string, timeout ...int) string {
+	return GetBase64(s.ObjectUrl(objectName), timeout...)
 }
 
 func (s QiNiuAdapter) Client() any {
