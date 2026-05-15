@@ -21,6 +21,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/lgdzz/vingo-utils-v3/moment"
 	"gorm.io/gorm"
 )
@@ -234,30 +235,116 @@ func (s *Common) QueryWhere(db *gorm.DB, input any, column ...string) *gorm.DB {
 }
 
 // QueryWhereIn 包含查询
-func (s *Common) QueryWhereIn(db *gorm.DB, input TextSlice, column string, t ...string) *gorm.DB {
+func (s *Common) QueryWhereIn(db *gorm.DB, input TextSlice, column string, columnType ...string) *gorm.DB {
 	db = s.QueryDb(db)
-	if input != "" {
-		if len(t) > 0 {
-			switch t[0] {
-			case "int":
-				db = db.Where(fmt.Sprintf("%v in(?)", column), input.ToIntSlice())
-			case "string":
-				db = db.Where(fmt.Sprintf("%v in(?)", column), input.ToStringSlice())
-			}
-		} else {
-			db = db.Where(fmt.Sprintf("%v in(?)", column), input.ToSlice())
-		}
-	}
-	return db
+	return applyInNotIn(db, input, column, false, columnType...)
 }
 
 // QueryWhereNotIn 排除查询
-func (s *Common) QueryWhereNotIn(db *gorm.DB, input TextSlice, column string) *gorm.DB {
+func (s *Common) QueryWhereNotIn(db *gorm.DB, input TextSlice, column string, columnType ...string) *gorm.DB {
 	db = s.QueryDb(db)
-	if input != "" {
-		db = db.Where(fmt.Sprintf("%v not in(?)", column), input.ToSlice())
+	return applyInNotIn(db, input, column, true, columnType...)
+}
+
+// applyInNotIn 内部通用处理 IN / NOT IN
+func applyInNotIn(db *gorm.DB, input TextSlice, column string, not bool, columnType ...string) *gorm.DB {
+	if input == "" {
+		return db
 	}
-	return db
+	cond := "IN"
+	if not {
+		cond = "NOT IN"
+	}
+	format := fmt.Sprintf("%v %s (?)", column, cond)
+	if len(columnType) > 0 {
+		switch columnType[0] {
+		case "int":
+			return db.Where(format, input.ToIntSlice())
+		case "string":
+			return db.Where(format, input.ToStringSlice())
+		}
+	}
+	return db.Where(format, input.ToSlice())
+}
+
+// QueryWhereExists 封装EXISTS/NOT EXISTS子查询条件
+// 用法示例：
+//
+// GORM 子查询示例：
+//
+//	sub := db.Model(&User{}).Where("user.id = order.user_id")
+//	db = s.QueryWhereExists(db, sub) // EXISTS
+//	db = s.QueryWhereExists(db, sub, false) // NOT EXISTS
+//
+// 原生 SQL（Raw）示例：
+//
+//	sub := db.Raw("SELECT 1 FROM users WHERE users.id = orders.user_id AND status = ?", "active")
+//	db = s.QueryWhereExists(db, sub) // 使用原生子查询
+//
+// GORM + 原生条件组合示例：
+//
+//	sub := db.Model(&User{}).
+//		Where("user.id = order.user_id").
+//		Where("status = ?", "active").
+//		Select("1")
+//	db = s.QueryWhereExists(db, sub)
+//
+// 注意：当 sub 为空、sub.Statement 为空或未生成 SQL 时，会被忽略返回原 db
+func (s *Common) QueryWhereExists(db *gorm.DB, sub *gorm.DB, exists ...bool) *gorm.DB {
+	isExists := true
+	if len(exists) > 0 {
+		isExists = exists[0]
+	}
+	// 复用 QueryWhereExistsMulti 的实现，使用 AND 与单个子查询
+	return s.QueryWhereExistsMulti(db, "AND", isExists, sub)
+}
+
+func (s *Common) QueryWhereExistsOr(db *gorm.DB, sub *gorm.DB, exists ...bool) *gorm.DB {
+	isExists := true
+	if len(exists) > 0 {
+		isExists = exists[0]
+	}
+	// 复用 QueryWhereExistsMulti 的实现，使用 AND 与单个子查询
+	return s.QueryWhereExistsMulti(db, "OR", isExists, sub)
+}
+
+// QueryWhereExistsMulti 支持多个子查询组合，op 支持 "AND" 或 "OR"，exists 为 true 表示 EXISTS，false 表示 NOT EXISTS
+// 多个子查询组合示例（AND / OR）：
+//
+//	sub1 := db.Model(&User{}).Where("user.id = order.user_id").Select("1")
+//	sub2 := db.Raw("SELECT 1 FROM payments WHERE payments.order_id = orders.id AND paid = ?", true)
+//	db = s.QueryWhereExistsMulti(db, "AND", true, sub1, sub2) // (EXISTS(sub1) AND EXISTS(sub2))
+//	db = s.QueryWhereExistsMulti(db, "OR", false, sub1, sub2) // (NOT EXISTS(sub1) OR NOT EXISTS(sub2))
+func (s *Common) QueryWhereExistsMulti(db *gorm.DB, op string, exists bool, subs ...*gorm.DB) *gorm.DB {
+	db = s.QueryDb(db)
+	if len(subs) == 0 {
+		return db
+	}
+	op = strings.ToUpper(strings.TrimSpace(op))
+	if op != "AND" && op != "OR" {
+		op = "AND"
+	}
+	var parts []string
+	var args []interface{}
+	for _, sub := range subs {
+		if sub == nil || sub.Statement == nil || sub.Statement.SQL.String() == "" {
+			continue
+		}
+		if len(sub.Statement.Selects) == 0 {
+			sub = sub.Select("1")
+		}
+		if exists {
+			parts = append(parts, "EXISTS (?)")
+		} else {
+			parts = append(parts, "NOT EXISTS (?)")
+		}
+		args = append(args, sub)
+	}
+	if len(parts) == 0 {
+		return db
+	}
+	clause := strings.Join(parts, " "+op+" ")
+	return db.Where(clause, args...)
 }
 
 // QueryWhereBetween 范围查询
@@ -322,6 +409,24 @@ func (s *Common) QueryWhereLikeRight(db *gorm.DB, input TextSlice, column ...str
 			}
 		}
 		db = db.Where(strings.Join(text, " OR "))
+	}
+	return db
+}
+
+// QueryWhereLikeWithPage 集合模糊查询
+func (s *Common) QueryWhereLikeWithPage(db *gorm.DB, page PageQuery) *gorm.DB {
+	db = s.QueryDb(db)
+	if page.LikeColumn != "" && page.LikeValue != "" {
+		var column = page.LikeColumn.ToStringSlice()
+		// 如果指定白名单，则进行白名单过滤
+		if page.LikeWhitelist != nil && len(*page.LikeWhitelist) > 0 {
+			column = slice.Filter(column, func(index int, item string) bool {
+				return slice.Contain(*page.LikeWhitelist, item)
+			})
+		}
+		if len(column) > 0 {
+			return s.QueryWhereLike(db, page.LikeValue, column...)
+		}
 	}
 	return db
 }

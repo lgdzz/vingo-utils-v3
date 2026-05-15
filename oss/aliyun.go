@@ -101,6 +101,10 @@ func (s AliYunAdapter) GetBase64(objectName string, timeout ...int) (string, str
 	return GetBase64(s.ObjectUrl(objectName), timeout...)
 }
 
+func (s AliYunAdapter) ObjectName(objectUrl string) string {
+	return ExtractObjectName(objectUrl, "")
+}
+
 func (s AliYunAdapter) Client() any {
 	return s.client
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -14,6 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/lgdzz/vingo-utils-v3/vingo"
 )
 
 type Option struct {
@@ -45,7 +46,7 @@ func NewOption(opt *Option) Option {
 	return def
 }
 
-func Get(url string, opt Option) []byte {
+func Get(url string, opt Option) ([]byte, string) {
 	opt = NewOption(&opt)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -55,7 +56,7 @@ func Get(url string, opt Option) []byte {
 	return doRequest(req, *opt.Timeout)
 }
 
-func PostJSON(url string, body interface{}, opt Option) []byte {
+func PostJSON(url string, body interface{}, opt Option) ([]byte, string) {
 	opt = NewOption(&opt)
 	var requestBody []byte
 	if body != nil {
@@ -70,7 +71,7 @@ func PostJSON(url string, body interface{}, opt Option) []byte {
 	return doRequest(req, *opt.Timeout)
 }
 
-func PostFormData(url string, form map[string]string, opt Option) []byte {
+func PostFormData(url string, form map[string]string, opt Option) ([]byte, string) {
 	opt = NewOption(&opt)
 
 	var requestBody bytes.Buffer
@@ -90,7 +91,7 @@ func PostFormData(url string, form map[string]string, opt Option) []byte {
 	return doRequest(req, *opt.Timeout)
 }
 
-func PostFormURLEncoded(urlPath string, form map[string]string, opt Option) []byte {
+func PostFormURLEncoded(urlPath string, form map[string]string, opt Option) ([]byte, string) {
 	opt = NewOption(&opt)
 
 	data := url.Values{}
@@ -107,7 +108,7 @@ func PostFormURLEncoded(urlPath string, form map[string]string, opt Option) []by
 	return doRequest(req, *opt.Timeout)
 }
 
-func PostFile(url string, opt Option, filePath string) []byte {
+func PostFile(url string, opt Option, filePath string) ([]byte, string) {
 	opt = NewOption(&opt)
 
 	file, err := os.Open(filePath)
@@ -241,7 +242,7 @@ func setHeaders(req *http.Request, headers *map[string]string) {
 	}
 }
 
-func doRequest(req *http.Request, timeout int) []byte {
+func doRequest(req *http.Request, timeout int) ([]byte, string) {
 	client := &http.Client{
 		Timeout: time.Duration(timeout) * time.Second,
 	}
@@ -255,5 +256,6 @@ func doRequest(req *http.Request, timeout int) []byte {
 	if err != nil {
 		panic(err)
 	}
-	return data
+	contentType := resp.Header.Get("Content-Type")
+	return data, contentType
 }

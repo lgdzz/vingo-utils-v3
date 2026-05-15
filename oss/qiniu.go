@@ -98,6 +98,10 @@ func (s QiNiuAdapter) GetBase64(objectName string, timeout ...int) (string, stri
 	return GetBase64(s.ObjectUrl(objectName), timeout...)
 }
 
+func (s QiNiuAdapter) ObjectName(objectUrl string) string {
+	return ExtractObjectName(objectUrl, "")
+}
+
 func (s QiNiuAdapter) Client() any {
 	return map[string]any{
 		"mac":     s.mac,

@@ -101,6 +101,7 @@ func (s MinIOAdapter) Delete(objectName string) error {
 }
 
 func (s MinIOAdapter) UploadBase64(objectName string, contentType string, fileBase64 string) {
+	// put上传弃用
 	//var fileBase64Array = strings.Split(fileBase64, ",")
 	//if len(fileBase64Array) > 1 {
 	//	fileBase64 = fileBase64Array[1]
@@ -114,6 +115,7 @@ func (s MinIOAdapter) UploadBase64(objectName string, contentType string, fileBa
 	//	panic(err.Error())
 	//}
 
+	// 该用post上传
 	fileBase64Array := strings.Split(fileBase64, ",")
 	if len(fileBase64Array) > 1 {
 		fileBase64 = fileBase64Array[1]
@@ -187,6 +189,10 @@ func (s MinIOAdapter) GetImageBase64(objectName string, timeout ...int) (string,
 
 func (s MinIOAdapter) GetBase64(objectName string, timeout ...int) (string, string) {
 	return GetBase64(s.ObjectUrl(objectName), timeout...)
+}
+
+func (s MinIOAdapter) ObjectName(objectUrl string) string {
+	return ExtractObjectName(objectUrl, s.Config.Bucket)
 }
 
 func (s MinIOAdapter) Client() any {

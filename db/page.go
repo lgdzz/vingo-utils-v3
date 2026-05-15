@@ -73,9 +73,13 @@ func (s *PageOrder) HandleColumn() string {
 }
 
 type PageQuery struct {
-	Limit    PageLimit
-	Order    *PageOrder
-	OrderRaw *string // 原始排序规则
+	Limit         PageLimit
+	Order         *PageOrder
+	OrderRaw      *string   // 原始排序规则
+	Keyword       TextSlice `form:"keyword"`    // 模糊查询
+	LikeColumn    TextSlice `form:"likeColumn"` // 模糊查询列
+	LikeValue     TextSlice `form:"likeValue"`  // 模糊查询值
+	LikeWhitelist *[]string // 模糊查询列白名单
 }
 
 type QueryOption[T any] struct {

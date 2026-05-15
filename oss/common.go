@@ -8,7 +8,11 @@ package oss
 
 import (
 	"encoding/base64"
-	"net/http"
+	"fmt"
+	"net/url"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/lgdzz/vingo-utils-v3/request"
 	"github.com/lgdzz/vingo-utils-v3/vingo"
@@ -23,8 +27,40 @@ func GetBase64(addr string, timeout ...int) (string, string) {
 	if len(timeout) > 0 {
 		t = vingo.Of(timeout[0])
 	}
-	data := request.Get(addr, request.Option{Timeout: t})
-	mimeType := http.DetectContentType(data)
+
+	u, err := url.Parse(addr)
+	if err != nil {
+		panic(err)
+	}
+	query := u.Query()
+	query.Set("_t", strconv.FormatInt(time.Now().UnixNano(), 10))
+	u.RawQuery = query.Encode()
+
+	data, mimeType := request.Get(u.String(), request.Option{Timeout: t})
 	base64Str := base64.StdEncoding.EncodeToString(data)
 	return "data:" + mimeType + ";base64," + base64Str, mimeType
+}
+
+func ExtractObjectName(objectUrl string, bucket string) string {
+	u, err := url.Parse(objectUrl)
+	if err != nil {
+		panic(fmt.Sprintf("文件地址提取objectName错误：%v", err.Error()))
+	}
+
+	// 去掉开头 /
+	path := strings.TrimPrefix(u.Path, "/")
+
+	// 去掉 bucket（minio需要）
+	if bucket != "" {
+		prefix := bucket + "/"
+		path = strings.TrimPrefix(path, prefix)
+	}
+
+	// URL 解码
+	res, err := url.PathUnescape(path)
+	if err != nil {
+		panic(fmt.Sprintf("文件地址提取objectName错误：%v", err.Error()))
+	}
+
+	return res
 }
