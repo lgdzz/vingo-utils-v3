@@ -317,33 +317,41 @@ func (s *Common) QueryWhereExistsOr(db *gorm.DB, sub *gorm.DB, exists ...bool) *
 //	db = s.QueryWhereExistsMulti(db, "OR", false, sub1, sub2) // (NOT EXISTS(sub1) OR NOT EXISTS(sub2))
 func (s *Common) QueryWhereExistsMulti(db *gorm.DB, op string, exists bool, subs ...*gorm.DB) *gorm.DB {
 	db = s.QueryDb(db)
+
 	if len(subs) == 0 {
 		return db
 	}
+
 	op = strings.ToUpper(strings.TrimSpace(op))
 	if op != "AND" && op != "OR" {
 		op = "AND"
 	}
+
 	var parts []string
 	var args []interface{}
+
 	for _, sub := range subs {
-		if sub == nil || sub.Statement == nil || sub.Statement.SQL.String() == "" {
+		if sub == nil {
 			continue
 		}
-		if len(sub.Statement.Selects) == 0 {
-			sub = sub.Select("1")
-		}
+
+		sub = sub.Select("1")
+
 		if exists {
 			parts = append(parts, "EXISTS (?)")
 		} else {
 			parts = append(parts, "NOT EXISTS (?)")
 		}
+
 		args = append(args, sub)
 	}
+
 	if len(parts) == 0 {
 		return db
 	}
+
 	clause := strings.Join(parts, " "+op+" ")
+
 	return db.Where(clause, args...)
 }
 
