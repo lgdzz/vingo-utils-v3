@@ -260,3 +260,23 @@ func (s *MysqlAdapter) SumWithCondition(condition string, column string) string 
 func (s *MysqlAdapter) AvgWithCondition(condition string, column string) string {
 	return fmt.Sprintf("AVG(CASE WHEN %s THEN %s END)", condition, column)
 }
+
+// GroupExpr 分组表达式
+func (s *MysqlAdapter) GroupExpr(column string, defaultValue ...string) string {
+	dv := "未知"
+	if len(defaultValue) > 0 {
+		dv = defaultValue[0]
+	}
+	// NULLIF方法，参数1==参数2，返回NULL
+	// COALESCE方法，参数1==NULL，返回参数2
+	return fmt.Sprintf(
+		"COALESCE(NULLIF(CAST(%s AS CHAR), ''), '%s')",
+		column,
+		dv,
+	)
+}
+
+// DistinctCount 去重统计
+func (s *MysqlAdapter) DistinctCount(column string) string {
+	return fmt.Sprintf("COUNT(DISTINCT %s)", column)
+}
