@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lgdzz/vingo-utils-v3/cryptor"
 	"github.com/lgdzz/vingo-utils-v3/vingo"
 )
 
@@ -58,7 +59,7 @@ func (s *Api) UpdateDocx(c *vingo.Context) {
 	input := vingo.GetRequestBody[Callback](c)
 	if input.Status == 6 {
 		docxBase64, contentType := s.OSS.GetBase64(input.URL)
-		s.OSS.UploadBase64(s.OSS.ObjectName(input.URL), contentType, docxBase64)
+		s.OSS.UploadBase64(s.OSS.ObjectName(cryptor.TextBase64Decode(input.Key)), contentType, docxBase64)
 	}
 	c.JSON(200, gin.H{"error": 0})
 }
