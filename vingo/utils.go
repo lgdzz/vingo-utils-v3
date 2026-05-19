@@ -329,3 +329,57 @@ func DiffByFunc[T any, K comparable](oldList, newList []T, keyFunc func(T) K) []
 
 	return result
 }
+
+// FillTimeSeries 补齐时间
+func FillTimeSeries(
+	list []map[string]any,
+	timeKey string,
+	timeValues []string,
+	defaultValues map[string]any,
+) []map[string]any {
+
+	// 原数据转 map
+	dataMap := make(map[string]map[string]any)
+
+	for _, item := range list {
+
+		key := convertor.ToString(item[timeKey])
+
+		dataMap[key] = item
+	}
+
+	// 补齐
+	var result = make([]map[string]any, 0, len(timeValues))
+
+	for _, value := range timeValues {
+
+		// 已存在
+		if item, ok := dataMap[value]; ok {
+
+			// 补默认字段
+			for k, v := range defaultValues {
+
+				if item[k] == nil {
+					item[k] = v
+				}
+			}
+
+			result = append(result, item)
+
+			continue
+		}
+
+		// 创建默认数据
+		row := make(map[string]any)
+
+		row[timeKey] = value
+
+		for k, v := range defaultValues {
+			row[k] = v
+		}
+
+		result = append(result, row)
+	}
+
+	return result
+}
