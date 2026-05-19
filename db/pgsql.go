@@ -310,3 +310,46 @@ func (s *PgsqlAdapter) GroupExpr(column string, defaultValue ...string) string {
 func (s *PgsqlAdapter) DistinctCount(column string) string {
 	return fmt.Sprintf("count(DISTINCT %s)", column)
 }
+
+func (s *PgsqlAdapter) ColumnGroupCountExpr(column string, category ...string) string {
+	return s.columnGroupExpr("COUNT", "1", column, category...)
+}
+
+func (s *PgsqlAdapter) ColumnGroupSumExpr(sumColumn string, conditionColumn string, category ...string) string {
+	return s.columnGroupExpr("SUM", sumColumn, conditionColumn, category...)
+}
+
+func (s *PgsqlAdapter) columnGroupExpr(method string, valueColumn string, conditionColumn string, category ...string) string {
+	var expr []string
+
+	for _, value := range category {
+
+		alias := strings.ReplaceAll(value, "-", "_")
+
+		var item string
+
+		switch method {
+		case "COUNT":
+			item = fmt.Sprintf(
+				`COUNT(%s) FILTER (WHERE %s = '%s') AS "%s"`,
+				valueColumn,
+				conditionColumn,
+				value,
+				alias,
+			)
+
+		case "SUM":
+			item = fmt.Sprintf(
+				`SUM(%s) FILTER (WHERE %s = '%s') AS "%s"`,
+				valueColumn,
+				conditionColumn,
+				value,
+				alias,
+			)
+		}
+
+		expr = append(expr, item)
+	}
+
+	return strings.Join(expr, ",")
+}

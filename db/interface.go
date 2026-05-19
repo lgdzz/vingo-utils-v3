@@ -27,4 +27,6 @@ type Adapter interface {
 	AvgWithCondition(condition string, column string) string
 	GroupExpr(column string, defaultValue ...string) string
 	DistinctCount(column string) string
+	ColumnGroupCountExpr(column string, category ...string) string
+	ColumnGroupSumExpr(column string, category ...string) string
 }

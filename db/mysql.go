@@ -280,3 +280,46 @@ func (s *MysqlAdapter) GroupExpr(column string, defaultValue ...string) string {
 func (s *MysqlAdapter) DistinctCount(column string) string {
 	return fmt.Sprintf("COUNT(DISTINCT %s)", column)
 }
+
+func (s *MysqlAdapter) ColumnGroupCountExpr(column string, category ...string) string {
+	return s.columnGroupCountExpr("COUNT", "1", column, category...)
+}
+
+func (s *MysqlAdapter) ColumnGroupSumExpr(sumColumn string, conditionColumn string, category ...string) string {
+	return s.columnGroupCountExpr("SUM", sumColumn, conditionColumn, category...)
+}
+
+func (s *MysqlAdapter) columnGroupCountExpr(method string, valueColumn string, conditionColumn string, category ...string) string {
+	var expr []string
+
+	for _, value := range category {
+
+		alias := strings.ReplaceAll(value, "-", "_")
+
+		var item string
+
+		switch method {
+
+		case "COUNT":
+			item = fmt.Sprintf(
+				`SUM(CASE WHEN %s = '%s' THEN 1 ELSE 0 END) AS %s`,
+				conditionColumn,
+				value,
+				alias,
+			)
+
+		case "SUM":
+			item = fmt.Sprintf(
+				`SUM(CASE WHEN %s = '%s' THEN %s ELSE 0 END) AS %s`,
+				conditionColumn,
+				value,
+				valueColumn,
+				alias,
+			)
+		}
+
+		expr = append(expr, item)
+	}
+
+	return strings.Join(expr, ",")
+}
