@@ -28,5 +28,5 @@ type Adapter interface {
 	GroupExpr(column string, defaultValue ...string) string
 	DistinctCount(column string) string
 	ColumnGroupCountExpr(column string, category ...string) string
-	ColumnGroupSumExpr(column string, category ...string) string
+	ColumnGroupSumExpr(sumColumn string, conditionColumn string, category ...string) string
 }

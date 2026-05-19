@@ -302,7 +302,7 @@ func (s *MysqlAdapter) columnGroupCountExpr(method string, valueColumn string, c
 
 		case "COUNT":
 			item = fmt.Sprintf(
-				`SUM(CASE WHEN %s = '%s' THEN 1 ELSE 0 END) AS %s`,
+				`COALESCE(SUM(CASE WHEN %s = '%s' THEN 1 ELSE 0 END),0) AS %s`,
 				conditionColumn,
 				value,
 				alias,
@@ -310,7 +310,7 @@ func (s *MysqlAdapter) columnGroupCountExpr(method string, valueColumn string, c
 
 		case "SUM":
 			item = fmt.Sprintf(
-				`SUM(CASE WHEN %s = '%s' THEN %s ELSE 0 END) AS %s`,
+				`COALESCE(SUM(CASE WHEN %s = '%s' THEN %s ELSE 0 END),0) AS %s`,
 				conditionColumn,
 				value,
 				valueColumn,

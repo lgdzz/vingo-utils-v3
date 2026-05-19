@@ -340,7 +340,7 @@ func (s *PgsqlAdapter) columnGroupExpr(method string, valueColumn string, condit
 
 		case "SUM":
 			item = fmt.Sprintf(
-				`SUM(%s) FILTER (WHERE %s = '%s') AS "%s"`,
+				`COALESCE(SUM(%s) FILTER (WHERE %s = '%s'),0) AS "%s"`,
 				valueColumn,
 				conditionColumn,
 				value,
