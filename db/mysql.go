@@ -24,7 +24,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// 新建一个数据库连接池
+// NewMysql 新建一个数据库连接池
 func NewMysql(config Config) *Api {
 	config.StringValue(&config.Host, "127.0.0.1")
 	config.StringValue(&config.Port, "3306")

@@ -3,11 +3,12 @@ package db
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/duke-git/lancet/v2/slice"
-	"gorm.io/gorm"
 	"log"
 	"reflect"
 	"strings"
+
+	"github.com/duke-git/lancet/v2/slice"
+	"gorm.io/gorm"
 )
 
 type DiffBoxInterface interface {

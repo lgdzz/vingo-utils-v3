@@ -479,3 +479,8 @@ func (s *Common) QueryWhereNotDeleted(db *gorm.DB, column string) *gorm.DB {
 func (s *Common) ChineseSortString(column string) string {
 	return fmt.Sprintf("CONVERT(SUBSTR(%v, 1, 1) USING gbk)", column)
 }
+
+// SumExpr SUM表达式
+func (s *Common) SumExpr(column string) string {
+	return fmt.Sprintf("COALESCE(SUM(%s),0)", column)
+}
