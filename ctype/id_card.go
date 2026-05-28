@@ -7,6 +7,9 @@
 package ctype
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -40,9 +43,56 @@ type IdCardInfo struct {
 	GenderInt  int    // 性别：1-男，2-女
 }
 
+var ErrInvalidIdCard = errors.New("身份证号不正确")
+
+// trim 去除首尾空白字符
+func (s IdCard) trim() string {
+	return strings.TrimSpace(string(s))
+}
+
+// Value 写入数据库时调用
+func (s IdCard) Value() (driver.Value, error) {
+	v := s.trim()
+
+	// 允许空值
+	if v == "" {
+		return "", nil
+	}
+
+	if !IdCard(v).IsValid() {
+		return nil, ErrInvalidIdCard
+	}
+
+	return v, nil
+}
+
+// UnmarshalJSON gin/json 反序列化时自动 trim
+func (s *IdCard) UnmarshalJSON(data []byte) error {
+	var v string
+
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+
+	v = strings.TrimSpace(v)
+
+	// JSON阶段直接校验
+	if v != "" && !IdCard(v).IsValid() {
+		return ErrInvalidIdCard
+	}
+
+	*s = IdCard(v)
+	return nil
+}
+
+// MarshalJSON 序列化时输出 trim 后内容
+func (s IdCard) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.trim())
+}
+
 // Analysis 解析身份证信息
 func (s IdCard) Analysis() IdCardInfo {
-	id := string(s)
+	id := s.trim()
 	if !s.IsValid() {
 		panic("身份证号不正确")
 	}
@@ -77,7 +127,7 @@ func (s IdCard) Analysis() IdCardInfo {
 // 3. 将求和结果除以11，取余数
 // 4. 根据余数，从对应表中找出校验码：{0: "1", 1: "0", 2: "X", 3: "9", 4: "8", 5: "7", 6: "6", 7: "5", 8: "4", 9: "3", 10: "2"}
 func (s IdCard) IsValid() bool {
-	id := string(s)
+	id := s.trim()
 	if len(id) != 18 {
 		return false
 	}
