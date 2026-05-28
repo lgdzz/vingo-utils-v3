@@ -53,11 +53,6 @@ func (p *Phone) UnmarshalJSON(data []byte) error {
 
 	v = strings.TrimSpace(v)
 
-	// JSON阶段直接校验
-	if v != "" && !Phone(v).IsValid() {
-		return ErrInvalidPhone
-	}
-
 	*p = Phone(v)
 	return nil
 }

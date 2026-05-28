@@ -76,11 +76,6 @@ func (s *IdCard) UnmarshalJSON(data []byte) error {
 
 	v = strings.TrimSpace(v)
 
-	// JSON阶段直接校验
-	if v != "" && !IdCard(v).IsValid() {
-		return ErrInvalidIdCard
-	}
-
 	*s = IdCard(v)
 	return nil
 }
