@@ -31,6 +31,7 @@ func NewPgSql(config Config) *Api {
 	config.StringValue(&config.Username, "system")
 	config.StringValue(&config.Password, "123456")
 	config.StringValue(&config.Charset, "utf8mb4")
+	config.StringValue(&config.Schema, "public")
 	config.IntValue(&config.MaxIdleConns, 10)
 	config.IntValue(&config.MaxOpenConns, 100)
 
@@ -38,7 +39,7 @@ func NewPgSql(config Config) *Api {
 		Config: config,
 	}
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Shanghai", config.Host, config.Port, config.Username, config.Password, config.Dbname)
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable search_path=%s TimeZone=Asia/Shanghai", config.Host, config.Port, config.Username, config.Password, config.Dbname, config.Schema)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		SkipDefaultTransaction: true,
 		PrepareStmt:            true,
