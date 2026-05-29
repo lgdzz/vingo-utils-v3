@@ -54,21 +54,44 @@ type PageOrder struct {
 }
 
 func (s *PageOrder) HandleColumn() string {
+	//sort := strings.ToLower(strings.TrimSpace(s.Sort))
+	//if sort != "asc" && sort != "desc" {
+	//	panic("sortOrder 不合法，只允许 asc 或 desc")
+	//}
+	//if strings.ContainsAny(s.Column, " ;--") {
+	//	panic("sortField 存在 SQL 注入风险")
+	//}
+	//
+	//segments := strings.Split(s.Column, ".")
+	//for i, seg := range segments {
+	//	if seg == "" {
+	//		panic("字段名非法")
+	//	}
+	//	segments[i] = "`" + seg + "`"
+	//}
+	//return fmt.Sprintf("%s %s", strings.Join(segments, "."), sort)
+
 	sort := strings.ToLower(strings.TrimSpace(s.Sort))
 	if sort != "asc" && sort != "desc" {
 		panic("sortOrder 不合法，只允许 asc 或 desc")
 	}
-	if strings.ContainsAny(s.Column, " ;--") {
+
+	// 防注入（更严格）
+	if strings.ContainsAny(s.Column, " ;'\"\\") || strings.Contains(s.Column, "--") {
 		panic("sortField 存在 SQL 注入风险")
 	}
 
 	segments := strings.Split(s.Column, ".")
+
 	for i, seg := range segments {
 		if seg == "" {
 			panic("字段名非法")
 		}
-		segments[i] = "`" + seg + "`"
+
+		// PG / MySQL 通用安全写法：双引号
+		segments[i] = fmt.Sprintf(`"%s"`, seg)
 	}
+
 	return fmt.Sprintf("%s %s", strings.Join(segments, "."), sort)
 }
 
@@ -99,7 +122,7 @@ func (s *QueryOption[T]) BuildOrderString() string {
 		if s.Query.OrderRaw != nil {
 			return *s.Query.OrderRaw
 		}
-		return "`id` desc"
+		return `id desc`
 	}
 	if s.Query.Order != nil {
 		s.Orders = &[]PageOrder{*s.Query.Order}
