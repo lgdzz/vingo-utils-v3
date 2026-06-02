@@ -12,18 +12,19 @@ const (
 )
 
 type Config struct {
-	Host         string `yaml:"host" json:"host"`
-	Port         string `yaml:"port" json:"port"`
-	Dbname       string `yaml:"dbname" json:"dbname"`
-	Schema       string `yaml:"schema" json:"schema"`
-	Username     string `yaml:"username" json:"username"`
-	Password     string `yaml:"password" json:"password"`
-	Charset      string `yaml:"charset" json:"charset"`
-	MaxIdleConns int    `yaml:"maxIdleConns" json:"maxIdleConns"`
-	MaxOpenConns int    `yaml:"maxOpenConns" json:"maxOpenConns"`
-	Driver       string `yaml:"driver" json:"driver"`
-	Secret       string `yaml:"secret" json:"secret"` // ciphertext类型字段key
-	Debug        bool   `yaml:"debug" json:"debug"`
+	Host           string `yaml:"host" json:"host"`
+	Port           string `yaml:"port" json:"port"`
+	Dbname         string `yaml:"dbname" json:"dbname"`
+	Schema         string `yaml:"schema" json:"schema"`
+	Username       string `yaml:"username" json:"username"`
+	Password       string `yaml:"password" json:"password"`
+	Charset        string `yaml:"charset" json:"charset"`
+	ConnectTimeout int    `yaml:"connectTimeout" json:"connectTimeout"`
+	MaxIdleConns   int    `yaml:"maxIdleConns" json:"maxIdleConns"`
+	MaxOpenConns   int    `yaml:"maxOpenConns" json:"maxOpenConns"`
+	Driver         string `yaml:"driver" json:"driver"`
+	Secret         string `yaml:"secret" json:"secret"` // ciphertext类型字段key
+	Debug          bool   `yaml:"debug" json:"debug"`
 }
 
 func (s *Config) StringValue(value *string, defaultValue string) {

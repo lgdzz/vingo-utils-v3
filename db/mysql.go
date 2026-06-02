@@ -31,6 +31,7 @@ func NewMysql(config Config) *Api {
 	config.StringValue(&config.Username, "root")
 	config.StringValue(&config.Password, "123456789")
 	config.StringValue(&config.Charset, "utf8mb4")
+	config.IntValue(&config.ConnectTimeout, 5)
 	config.IntValue(&config.MaxIdleConns, 10)
 	config.IntValue(&config.MaxOpenConns, 100)
 
@@ -38,13 +39,14 @@ func NewMysql(config Config) *Api {
 		Config: config,
 	}
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=true&loc=Local",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=true&loc=Local&timeout=%ds",
 		config.Username,
 		config.Password,
 		config.Host,
 		config.Port,
 		config.Dbname,
-		config.Charset)
+		config.Charset,
+		config.ConnectTimeout)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		SkipDefaultTransaction: true,
 		PrepareStmt:            true,
