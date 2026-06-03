@@ -188,7 +188,7 @@ func (s MinIOAdapter) GetImageBase64(objectName string, timeout ...int) (string,
 }
 
 func (s MinIOAdapter) GetBase64(objectName string, timeout ...int) (string, string) {
-	return GetBase64(s.ObjectUrl(objectName), timeout...)
+	return GetBase64(s.objectUrl(objectName), timeout...)
 }
 
 func (s MinIOAdapter) ObjectName(objectUrl string) string {
