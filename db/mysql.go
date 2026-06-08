@@ -328,7 +328,7 @@ func (s *MysqlAdapter) columnGroupCountExpr(method string, valueColumn string, c
 
 // Total 汇总统计
 // exprMap key=别名	value=表达式
-func (s *MysqlAdapter) Total(db *gorm.DB, exprMap map[string]any) map[string]any {
+func (s *MysqlAdapter) Total(db *gorm.DB, exprMap map[string]string) map[string]any {
 	var result = map[string]any{}
 
 	expr := make([]string, 0)

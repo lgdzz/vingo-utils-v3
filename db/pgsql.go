@@ -358,7 +358,7 @@ func (s *PgsqlAdapter) columnGroupExpr(method string, valueColumn string, condit
 
 // Total 汇总统计
 // exprMap key=别名	value=表达式
-func (s *PgsqlAdapter) Total(db *gorm.DB, exprMap map[string]any) map[string]any {
+func (s *PgsqlAdapter) Total(db *gorm.DB, exprMap map[string]string) map[string]any {
 	var result = map[string]any{}
 
 	expr := make([]string, 0)
