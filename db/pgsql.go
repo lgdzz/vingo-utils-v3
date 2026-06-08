@@ -355,3 +355,21 @@ func (s *PgsqlAdapter) columnGroupExpr(method string, valueColumn string, condit
 
 	return strings.Join(expr, ",")
 }
+
+// Total 汇总统计
+// exprMap key=别名	value=表达式
+func (s *PgsqlAdapter) Total(db *gorm.DB, exprMap map[string]any) map[string]any {
+	var result = map[string]any{}
+
+	expr := make([]string, 0)
+
+	for key, value := range exprMap {
+		// 生成表达式文本如：`CountWithCondition("room_type='01'") AS 个人调解室`
+		expr = append(expr, fmt.Sprintf(`%s AS "%s"`, value, key))
+	}
+
+	db = db.Select(strings.Join(expr, ","))
+	db = db.Scan(&result)
+
+	return result
+}

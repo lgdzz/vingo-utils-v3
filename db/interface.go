@@ -29,4 +29,5 @@ type Adapter interface {
 	DistinctCount(column string) string
 	ColumnGroupCountExpr(column string, category ...string) string
 	ColumnGroupSumExpr(sumColumn string, conditionColumn string, category ...string) string
+	Total(db *gorm.DB, exprMap map[string]any) map[string]any
 }
