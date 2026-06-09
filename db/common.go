@@ -186,6 +186,23 @@ func (s *Common) TXNotExistsErr(tx *gorm.DB, model any, condition ...any) {
 	}
 }
 
+func (s *Common) ExistsTable(table string, condition ...any) bool {
+	var count int64
+
+	tx := s.DB.Table(table)
+
+	if len(condition) > 0 {
+		tx = tx.Where(condition[0], condition[1:]...)
+	}
+
+	err := tx.Limit(1).Count(&count).Error
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return count > 0
+}
+
 // CheckHasChild 检查是否有子项，有则抛出异常
 func (s *Common) CheckHasChild(model any, id int) {
 	err := s.DB.First(model, "pid=?", id)
