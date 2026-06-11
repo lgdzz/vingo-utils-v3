@@ -176,6 +176,9 @@ func (s MinIOAdapter) UploadBase64(objectName string, contentType string, fileBa
 }
 
 func (s MinIOAdapter) objectUrl(objectName string) string {
+	if strings.HasPrefix(objectName, "http") {
+		return objectName
+	}
 	// 如果有内网地址，则使用内网地址访问（MinIO）
 	if s.Config.Intranet != "" {
 		return fmt.Sprintf("http://%v/%v/%v", s.Config.Intranet, s.Config.Bucket, objectName)
@@ -184,7 +187,7 @@ func (s MinIOAdapter) objectUrl(objectName string) string {
 }
 
 func (s MinIOAdapter) GetImageBase64(objectName string, timeout ...int) (string, string) {
-	return GetImageBase64(s.ObjectUrl(objectName), timeout...)
+	return GetImageBase64(s.objectUrl(objectName), timeout...)
 }
 
 func (s MinIOAdapter) GetBase64(objectName string, timeout ...int) (string, string) {
