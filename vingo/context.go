@@ -431,10 +431,30 @@ func GetRequestBody[T any](c *Context, valid ...bool) T {
 		}
 	}
 
+	const maxLogSize = 50 * 1024 // 50KB
+	if c.Request.ContentLength > maxLogSize {
+		c.Set("requestBody",
+			fmt.Sprintf(
+				"[Body Too Large] size=%d bytes",
+				c.Request.ContentLength,
+			),
+		)
+		return body
+	}
+
 	if data, err := json.Marshal(body); err != nil {
 		panic(err.Error())
 	} else {
-		c.Set("requestBody", string(data))
+		if len(data) > maxLogSize {
+			c.Set("requestBody",
+				fmt.Sprintf(
+					"[Body Too Large After Marshal] size=%d bytes",
+					len(data),
+				),
+			)
+		} else {
+			c.Set("requestBody", string(data))
+		}
 	}
 	return body
 }
