@@ -13,13 +13,23 @@ type MiniProgramConfig struct {
 	RedisApi  *vReids.Api // redis操作对象
 }
 
-// MiniProgram 微信小程序
-func MiniProgram(miniProgramConfig *MiniProgramConfig) *miniprogram.MiniProgram {
+type MiniProgram struct {
+	*MiniProgramConfig
+	*miniprogram.MiniProgram
+	FaceVerify FaceVerify
+}
+
+// NewMiniProgram 微信小程序
+func NewMiniProgram(miniProgramConfig *MiniProgramConfig) *MiniProgram {
 	wc := wechat.NewWechat()
 	cfg := &config.Config{
 		AppID:     miniProgramConfig.AppID,
 		AppSecret: miniProgramConfig.AppSecret,
 		Cache:     &Cache{RedisApi: miniProgramConfig.RedisApi},
 	}
-	return wc.GetMiniProgram(cfg)
+	return &MiniProgram{
+		MiniProgramConfig: miniProgramConfig,
+		MiniProgram:       wc.GetMiniProgram(cfg),
+		FaceVerify:        FaceVerify{},
+	}
 }
