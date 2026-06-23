@@ -85,19 +85,27 @@ func (c *Context) Response(d *ResponseData) {
 		d.Status = 200
 	}
 	uuid := c.GetString("requestUUID")
-	c.JSON(d.Status, gin.H{
-		"uuid":      uuid,
-		"error":     d.Error,
-		"message":   d.Message,
-		"data":      d.Data,
-		"timestamp": time.Now().Unix(),
-	})
+
+	startTime := c.GetTime("requestStart")
+	method := c.Request.Method
+	url_ := c.UrlDecode()
+	uri_ := c.Request.RequestURI
+
+	userAgent := c.GetHeader("User-Agent")
+	clientIp := c.GetString("clientIp")
+	user := c.GetString("user")
+	body := c.GetString("requestBody")
+
+	errorType := d.ErrorType
+	errorMsg := ""
+	if d.Error == 1 {
+		errorMsg = d.Message
+	}
 
 	if !d.NoLog {
 		// 记录请求日志
-		go func(context *Context, uuid string, d *ResponseData) {
-			ExceptionCatch("记录请求日志异常", false)
-			startTime := context.GetTime("requestStart")
+		go func() {
+			defer ExceptionCatch("记录请求日志异常", false)
 			endTime := time.Now()
 			latency := endTime.Sub(startTime)
 			millisecond := float64(latency.Nanoseconds()) / float64(time.Millisecond)
@@ -106,27 +114,30 @@ func (c *Context) Response(d *ResponseData) {
 				duration += ":慢接口"
 			}
 
-			var err string
-			if d.Error == 1 {
-				err = d.Message
-			}
-
-			if context.Request.Method == "GET" {
-				LogRequest(duration, fmt.Sprintf("{\"uuid\":\"%v\",\"method\":\"%v\",\"url\":\"%v\",\"err\":\"%v\",\"errType\":\"%v\",\"userAgent\":\"%v\",\"clientIP\":\"%v\",\"user\":\"%v\"}", uuid, context.Request.Method, context.UrlDecode(), err, d.ErrorType, c.GetHeader("User-Agent"), c.GetString("clientIp"), c.GetString("user")))
+			if method == "GET" {
+				LogRequest(duration, fmt.Sprintf("{\"uuid\":\"%v\",\"method\":\"%v\",\"url\":\"%v\",\"err\":\"%v\",\"errType\":\"%v\",\"userAgent\":\"%v\",\"clientIP\":\"%v\",\"user\":\"%v\"}", uuid, method, url_, errorMsg, errorType, userAgent, clientIp, user))
 			} else {
-				body := context.GetString("requestBody")
-				if body == "" {
-					body = "\"\""
+				bodyVal := body
+				if bodyVal == "" {
+					bodyVal = "\"\""
 				}
-				LogRequest(duration, fmt.Sprintf("{\"uuid\":\"%v\",\"method\":\"%v\",\"url\":\"%v\",\"body\":%v,\"err\":\"%v\",\"errType\":\"%v\",\"userAgent\":\"%v\",\"clientIP\":\"%v\",\"user\":\"%v\"}", uuid, context.Request.Method, context.Request.RequestURI, body, err, d.ErrorType, c.GetHeader("User-Agent"), c.GetString("clientIp"), c.GetString("user")))
+
+				LogRequest(duration, fmt.Sprintf("{\"uuid\":\"%v\",\"method\":\"%v\",\"url\":\"%v\",\"body\":%v,\"err\":\"%v\",\"errType\":\"%v\",\"userAgent\":\"%v\",\"clientIP\":\"%v\",\"user\":\"%v\"}", uuid, method, uri_, bodyVal, errorMsg, errorType, userAgent, clientIp, user))
 			}
 
-			if d.ErrorType == "异常错误" {
-				stack := string(debug.Stack())
-				LogError(stack)
+			if errorType == "异常错误" {
+				LogError(string(debug.Stack()))
 			}
-		}(c, uuid, d)
+		}()
 	}
+
+	c.JSON(d.Status, gin.H{
+		"uuid":      uuid,
+		"error":     d.Error,
+		"message":   d.Message,
+		"data":      d.Data,
+		"timestamp": time.Now().Unix(),
+	})
 }
 
 // ResponseBody 请求成功，带data数据

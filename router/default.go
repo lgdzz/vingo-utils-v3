@@ -89,6 +89,9 @@ func InitRouter(hook *Hook) {
 		Console(c, option)
 	})
 
+	// SSL证书
+	ssl(r)
+
 	r.GET("/favicon.ico", func(c *gin.Context) {
 		c.Status(204) // No Content
 	})
@@ -136,7 +139,7 @@ func Console(c *gin.Context, option HookOption) {
 		"Running Time": FormatDuration(option.startTime, time.Now()),
 		"Use Memory":   vingo.FormatBytes(int64(mem.RSS), 2),
 		"Goroutines":   runtime.NumGoroutine(),
-		"Client IP":    ctx.ClientIP(),
+		"Client IP":    ctx.GetRealClientIP(),
 		"Version":      cli.Version,
 	})
 }
