@@ -9,6 +9,7 @@ package oss
 import (
 	"encoding/base64"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -36,7 +37,11 @@ func GetBase64(addr string, timeout ...int) (string, string) {
 	query.Set("_t", strconv.FormatInt(time.Now().UnixNano(), 10))
 	u.RawQuery = query.Encode()
 
-	data, mimeType := request.Get(u.String(), request.Option{Timeout: t})
+	data, resp := request.Get(u.String(), request.Option{Timeout: t})
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Sprintf("%d", resp.StatusCode), ""
+	}
+	mimeType := resp.Header.Get("Content-Type")
 	base64Str := base64.StdEncoding.EncodeToString(data)
 	return "data:" + mimeType + ";base64," + base64Str, mimeType
 }

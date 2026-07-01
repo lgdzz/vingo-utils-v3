@@ -46,7 +46,7 @@ func NewOption(opt *Option) Option {
 	return def
 }
 
-func Get(url string, opt Option) ([]byte, string) {
+func Get(url string, opt Option) ([]byte, *http.Response) {
 	opt = NewOption(&opt)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -56,7 +56,7 @@ func Get(url string, opt Option) ([]byte, string) {
 	return doRequest(req, *opt.Timeout)
 }
 
-func PostJSON(url string, body interface{}, opt Option) ([]byte, string) {
+func PostJSON(url string, body interface{}, opt Option) ([]byte, *http.Response) {
 	opt = NewOption(&opt)
 	var requestBody []byte
 	if body != nil {
@@ -71,7 +71,7 @@ func PostJSON(url string, body interface{}, opt Option) ([]byte, string) {
 	return doRequest(req, *opt.Timeout)
 }
 
-func PostFormData(url string, form map[string]string, opt Option) ([]byte, string) {
+func PostFormData(url string, form map[string]string, opt Option) ([]byte, *http.Response) {
 	opt = NewOption(&opt)
 
 	var requestBody bytes.Buffer
@@ -91,7 +91,7 @@ func PostFormData(url string, form map[string]string, opt Option) ([]byte, strin
 	return doRequest(req, *opt.Timeout)
 }
 
-func PostFormURLEncoded(urlPath string, form map[string]string, opt Option) ([]byte, string) {
+func PostFormURLEncoded(urlPath string, form map[string]string, opt Option) ([]byte, *http.Response) {
 	opt = NewOption(&opt)
 
 	data := url.Values{}
@@ -108,7 +108,7 @@ func PostFormURLEncoded(urlPath string, form map[string]string, opt Option) ([]b
 	return doRequest(req, *opt.Timeout)
 }
 
-func PostFile(url string, opt Option, filePath string) ([]byte, string) {
+func PostFile(url string, opt Option, filePath string) ([]byte, *http.Response) {
 	opt = NewOption(&opt)
 
 	file, err := os.Open(filePath)
@@ -242,7 +242,7 @@ func setHeaders(req *http.Request, headers *map[string]string) {
 	}
 }
 
-func doRequest(req *http.Request, timeout int) ([]byte, string) {
+func doRequest(req *http.Request, timeout int) ([]byte, *http.Response) {
 	client := &http.Client{
 		Timeout: time.Duration(timeout) * time.Second,
 	}
@@ -256,6 +256,6 @@ func doRequest(req *http.Request, timeout int) ([]byte, string) {
 	if err != nil {
 		panic(err)
 	}
-	contentType := resp.Header.Get("Content-Type")
-	return data, contentType
+	//contentType := resp.Header.Get("Content-Type")
+	return data, resp
 }
