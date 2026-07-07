@@ -98,6 +98,10 @@ func (s QiNiuAdapter) GetBase64(objectName string, timeout ...int) (string, stri
 	return GetBase64(s.ObjectUrl(objectName), timeout...)
 }
 
+func (s QiNiuAdapter) GetBase64NotPrefix(objectName string, timeout ...int) (string, string) {
+	return GetBase64NotPrefix(s.ObjectUrl(objectName), timeout...)
+}
+
 func (s QiNiuAdapter) ObjectName(objectUrl string) string {
 	return ExtractObjectName(objectUrl, "")
 }

@@ -24,6 +24,14 @@ func GetImageBase64(addr string, timeout ...int) (string, string) {
 }
 
 func GetBase64(addr string, timeout ...int) (string, string) {
+	return getBase64(addr, true, timeout...)
+}
+
+func GetBase64NotPrefix(addr string, timeout ...int) (string, string) {
+	return getBase64(addr, false, timeout...)
+}
+
+func getBase64(addr string, hasPrefix bool, timeout ...int) (string, string) {
 	t := vingo.Of(60)
 	if len(timeout) > 0 {
 		t = vingo.Of(timeout[0])
@@ -43,7 +51,11 @@ func GetBase64(addr string, timeout ...int) (string, string) {
 	}
 	mimeType := resp.Header.Get("Content-Type")
 	base64Str := base64.StdEncoding.EncodeToString(data)
-	return "data:" + mimeType + ";base64," + base64Str, mimeType
+	if hasPrefix {
+		return "data:" + mimeType + ";base64," + base64Str, mimeType
+	} else {
+		return base64Str, mimeType
+	}
 }
 
 func ExtractObjectName(objectUrl string, bucket string) string {

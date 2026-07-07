@@ -7,12 +7,13 @@
 package oss
 
 type Adapter interface {
-	ObjectUrl(objectName string) string                                                       // 访问地址
-	ObjectName(objectUrl string) string                                                       // 从访问地址提取objectName
-	UploadSign(objectName string) any                                                         // 上传签名
-	Delete(objectName string) error                                                           // 删除文件
-	UploadBase64(objectName string, contentType string, fileBase64 string)                    // 上传base64
-	GetImageBase64(objectName string, timeout ...int) (fileBase64 string, contentType string) // 获取图片base64
-	GetBase64(objectName string, timeout ...int) (fileBase64 string, contentType string)      // 获取文件base64
+	ObjectUrl(objectName string) string                                                           // 访问地址
+	ObjectName(objectUrl string) string                                                           // 从访问地址提取objectName
+	UploadSign(objectName string) any                                                             // 上传签名
+	Delete(objectName string) error                                                               // 删除文件
+	UploadBase64(objectName string, contentType string, fileBase64 string)                        // 上传base64
+	GetImageBase64(objectName string, timeout ...int) (fileBase64 string, contentType string)     // 获取图片base64
+	GetBase64(objectName string, timeout ...int) (fileBase64 string, contentType string)          // 获取文件base64
+	GetBase64NotPrefix(objectName string, timeout ...int) (fileBase64 string, contentType string) // 获取文件base64，不含前缀信息
 	Client() any
 }

@@ -101,6 +101,10 @@ func (s AliYunAdapter) GetBase64(objectName string, timeout ...int) (string, str
 	return GetBase64(s.ObjectUrl(objectName), timeout...)
 }
 
+func (s AliYunAdapter) GetBase64NotPrefix(objectName string, timeout ...int) (string, string) {
+	return GetBase64NotPrefix(s.ObjectUrl(objectName), timeout...)
+}
+
 func (s AliYunAdapter) ObjectName(objectUrl string) string {
 	return ExtractObjectName(objectUrl, "")
 }

@@ -194,6 +194,10 @@ func (s MinIOAdapter) GetBase64(objectName string, timeout ...int) (string, stri
 	return GetBase64(s.objectUrl(objectName), timeout...)
 }
 
+func (s MinIOAdapter) GetBase64NotPrefix(objectName string, timeout ...int) (string, string) {
+	return GetBase64NotPrefix(s.objectUrl(objectName), timeout...)
+}
+
 func (s MinIOAdapter) ObjectName(objectUrl string) string {
 	return ExtractObjectName(objectUrl, s.Config.Bucket)
 }
