@@ -234,9 +234,11 @@ func setDiffNewValue(dest any) *string {
 type QueryListOption[T any] struct {
 	Iteratee func(i int, item T) any
 
-	IterateePool func(i int, item T) any // 映射函数（协程池）
-	PoolResult   *[]pool.Result          // 协程池结果
-	MaxWorkers   int                     // 最大协程数
+	IterateePool func(i int, item T) any           // 映射函数（协程池）
+	PoolSetVal   func(i int, result *[]T, val any) // 协程处理完保存处理结果
+
+	PoolResult *[]pool.Result // 协程池结果
+	MaxWorkers int            // 最大协程数
 
 	IsTree       bool // 是否返回树结构，只支持id,pid为number类型的主键，其他情况使用ListCallback自定义
 	ListCallback func(list []T) any
@@ -256,19 +258,17 @@ func QueryList[T any](db *gorm.DB, pq PageQuery, option *QueryListOption[T]) any
 		}
 		db.Scan(&result)
 		if option != nil {
-			if option.IterateePool != nil {
+			if option.IterateePool != nil && option.PoolSetVal != nil {
 				pool.FastPool(option.MaxWorkers, func(p *pool.GoroutinePool) {
 					for i, _ := range result {
 						p.FastSubmitLock(func() any {
 							return option.IterateePool(i, result[i])
 						}, func(res any) {
-							result[i] = res
+							option.PoolSetVal(i, &result, res)
 						})
 					}
 				})
-			}
-
-			if option.Iteratee != nil {
+			} else if option.Iteratee != nil {
 				data := slice.Map(result, func(index int, item T) any {
 					return option.Iteratee(index, item)
 				})
@@ -300,6 +300,7 @@ func QueryList[T any](db *gorm.DB, pq PageQuery, option *QueryListOption[T]) any
 		Query:        pq,
 		Iteratee:     option.Iteratee,
 		IterateePool: option.IterateePool,
+		PoolSetVal:   option.PoolSetVal,
 		PoolResult:   option.PoolResult,
 		MaxWorkers:   option.MaxWorkers,
 	})

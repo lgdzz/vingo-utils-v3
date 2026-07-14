@@ -7,12 +7,10 @@
 package db
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
 	"github.com/lgdzz/vingo-utils-v3/pool"
-	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"gorm.io/gorm"
 )
 
@@ -89,9 +87,11 @@ type QueryOption[T any] struct {
 	Orders   *[]PageOrder     // 预设排序规则
 	Iteratee func(int, T) any // 映射函数（可选）
 
-	IterateePool func(int, *T)  // 映射函数（协程池）
-	PoolResult   *[]pool.Result // 协程池结果
-	MaxWorkers   int            // 最大协程数
+	IterateePool func(int, T) any                  // 映射函数（协程池）
+	PoolSetVal   func(i int, result *[]T, val any) // 协程处理完保存处理结果
+
+	PoolResult *[]pool.Result // 协程池结果
+	MaxWorkers int            // 最大协程数
 }
 
 func (s *QueryOption[T]) BuildOrderString() string {
@@ -135,29 +135,22 @@ func NewPage[T any](option QueryOption[T]) PageResult {
 	}
 
 	// 转换处理
-	if option.Iteratee != nil {
+	if option.IterateePool != nil && option.PoolSetVal != nil {
+		pool.FastPool(option.MaxWorkers, func(p *pool.GoroutinePool) {
+			for i, _ := range records {
+				p.FastSubmitLock(func() any {
+					return option.IterateePool(i, records[i])
+				}, func(res any) {
+					option.PoolSetVal(i, &records, res)
+				})
+			}
+		})
+	} else if option.Iteratee != nil {
 		list := make([]any, 0, len(records))
 		for index, item := range records {
 			list = append(list, option.Iteratee(index, item))
 		}
 		result.Items = list
-	} else if option.IterateePool != nil {
-		if option.MaxWorkers <= 0 {
-			option.MaxWorkers = 100
-		}
-		p := pool.NewGoroutinePool(context.Background(), option.MaxWorkers)
-		p.Run()
-		for index := range records {
-			p.Submit(func(_ context.Context) pool.Result {
-				return pool.BusinessHandle(&records[index], index, func(object *T) any {
-					option.IterateePool(index, object)
-					return nil
-				})
-			})
-
-		}
-		option.PoolResult = vingo.Of(p.CloseAndWait())
-		result.Items = records
 	} else {
 		result.Items = records
 	}
