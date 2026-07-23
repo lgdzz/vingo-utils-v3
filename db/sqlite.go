@@ -38,7 +38,7 @@ func NewSqlite(config Config) *Api {
 	db.Exec("PRAGMA busy_timeout=5000")
 
 	if config.InitAfter != nil {
-		config.InitAfter()
+		config.InitAfter(db)
 	}
 
 	dbApi.DB = db

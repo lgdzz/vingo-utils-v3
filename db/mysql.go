@@ -79,7 +79,7 @@ func NewMysql(config Config) *Api {
 	sqlDB.SetConnMaxLifetime(60 * time.Minute)
 
 	if config.InitAfter != nil {
-		config.InitAfter()
+		config.InitAfter(db)
 	}
 
 	dbApi.DB = db
