@@ -71,6 +71,10 @@ func NewPgSql(config Config) *Api {
 	// 连接最大存活时长
 	sqlDB.SetConnMaxLifetime(60 * time.Minute)
 
+	if config.InitAfter != nil {
+		config.InitAfter()
+	}
+
 	dbApi.DB = db
 	return &dbApi
 }

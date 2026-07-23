@@ -43,6 +43,8 @@ func NewDatabase(config Config) *Api {
 	case "pgsql":
 		api = NewPgSql(config)
 		api.Adapter = NewPgsqlAdapter(api.DB)
+	case "sqlite":
+		api = NewSqlite(config)
 	default:
 		api = NewMysql(config)
 		api.Adapter = NewMysqlAdapter(api.DB)
