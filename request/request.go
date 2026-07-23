@@ -2,6 +2,7 @@ package request
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,6 +23,7 @@ type Option struct {
 	Timeout        *int
 	FileFieldName  *string
 	FileOtherField *map[string]string
+	Ctx            *context.Context
 }
 
 func NewOption(opt *Option) Option {
@@ -48,7 +50,15 @@ func NewOption(opt *Option) Option {
 
 func Get(url string, opt Option) ([]byte, *http.Response) {
 	opt = NewOption(&opt)
-	req, err := http.NewRequest("GET", url, nil)
+
+	var req *http.Request
+	var err error
+	if opt.Ctx != nil {
+		req, err = http.NewRequestWithContext(*opt.Ctx, "GET", url, nil)
+	} else {
+		req, err = http.NewRequest("GET", url, nil)
+	}
+
 	if err != nil {
 		panic(err)
 	}
@@ -62,7 +72,14 @@ func PostJSON(url string, body interface{}, opt Option) ([]byte, *http.Response)
 	if body != nil {
 		requestBody, _ = json.Marshal(body)
 	}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(requestBody))
+
+	var req *http.Request
+	var err error
+	if opt.Ctx != nil {
+		req, err = http.NewRequestWithContext(*opt.Ctx, "POST", url, bytes.NewBuffer(requestBody))
+	} else {
+		req, err = http.NewRequest("POST", url, bytes.NewBuffer(requestBody))
+	}
 	if err != nil {
 		panic(err)
 	}
@@ -81,7 +98,13 @@ func PostFormData(url string, form map[string]string, opt Option) ([]byte, *http
 	}
 	_ = writer.Close()
 
-	req, err := http.NewRequest("POST", url, &requestBody)
+	var req *http.Request
+	var err error
+	if opt.Ctx != nil {
+		req, err = http.NewRequestWithContext(*opt.Ctx, "POST", url, &requestBody)
+	} else {
+		req, err = http.NewRequest("POST", url, &requestBody)
+	}
 	if err != nil {
 		panic(err)
 	}
@@ -98,7 +121,13 @@ func PostFormURLEncoded(urlPath string, form map[string]string, opt Option) ([]b
 	for k, v := range form {
 		data.Set(k, v)
 	}
-	req, err := http.NewRequest("POST", urlPath, strings.NewReader(data.Encode()))
+	var req *http.Request
+	var err error
+	if opt.Ctx != nil {
+		req, err = http.NewRequestWithContext(*opt.Ctx, "POST", urlPath, strings.NewReader(data.Encode()))
+	} else {
+		req, err = http.NewRequest("POST", urlPath, strings.NewReader(data.Encode()))
+	}
 	if err != nil {
 		panic(err)
 	}
@@ -138,7 +167,12 @@ func PostFile(url string, opt Option, filePath string) ([]byte, *http.Response) 
 	}
 	_ = writer.Close()
 
-	req, err := http.NewRequest("POST", url, body)
+	var req *http.Request
+	if opt.Ctx != nil {
+		req, err = http.NewRequestWithContext(*opt.Ctx, "POST", url, body)
+	} else {
+		req, err = http.NewRequest("POST", url, body)
+	}
 	if err != nil {
 		panic(err)
 	}
