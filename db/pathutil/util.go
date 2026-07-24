@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"unicode"
 
 	"github.com/duke-git/lancet/v2/pointer"
 	"github.com/duke-git/lancet/v2/strutil"
@@ -34,6 +35,8 @@ type Option struct {
 	FieldLen  string // 默认 "Len"
 
 	JoinFields []JoinField
+
+	FieldStyle string // 驼峰：CamelCase|下划线：SnakeCase，默认下划线
 }
 
 func getFieldSafe(v reflect.Value, name string) (reflect.Value, bool) {
@@ -94,21 +97,25 @@ func upperFirst(s string) string {
 	//return strings.ToUpper(s[:1]) + s[1:]
 }
 
-func lowerFirst(s string) string {
-	return strutil.SnakeCase(s)
-	//if s == "" {
-	//	return s
-	//}
-	//runes := []rune(s)
-	//runes[0] = unicode.ToLower(runes[0])
-	//return string(runes)
+func lowerFirst(s string, style string) string {
+	switch style {
+	case "CamelCase":
+		if s == "" {
+			return s
+		}
+		runes := []rune(s)
+		runes[0] = unicode.ToLower(runes[0])
+		return string(runes)
+	default:
+		return strutil.SnakeCase(s)
+	}
 }
 
 func setPathOfChild[T any](model *T, option *Option) {
 	s := reflect.ValueOf(model).Elem()
 
 	var children []T
-	option.Tx.Find(&children, fmt.Sprintf("%v = ?", strutil.SnakeCase(option.FieldPid)), getIDString(s, option.FieldId))
+	option.Tx.Find(&children, fmt.Sprintf("%v = ?", lowerFirst(option.FieldPid, option.FieldStyle)), getIDString(s, option.FieldId))
 	for _, child := range children {
 		SetPathWithCreate[T](&child, model, option)
 		setPathOfChild[T](&child, option)
@@ -135,11 +142,14 @@ func SetPathWithCreate[T any](model *T, parent *T, option *Option) {
 	if option.FieldLen == "" {
 		option.FieldLen = "Len"
 	}
+	if option.FieldStyle == "" {
+		option.FieldStyle = "SnakeCase"
+	}
 
 	if hasParent(s, option.FieldPid) {
 		if parent == nil {
 			pid := getIDString(s, option.FieldPid)
-			parent = pointer.Of(db.Find[T](option.Tx, fmt.Sprintf("%v = ?", strutil.SnakeCase(option.FieldId)), pid))
+			parent = pointer.Of(db.Find[T](option.Tx, fmt.Sprintf("%v = ?", lowerFirst(option.FieldId, option.FieldStyle)), pid))
 		}
 		parentValue := reflect.ValueOf(parent).Elem()
 		path := fmt.Sprintf("%v,%v", getIDString(parentValue, option.FieldPath), getIDString(s, option.FieldId))
@@ -170,11 +180,11 @@ func SetPathWithCreate[T any](model *T, parent *T, option *Option) {
 
 	// 构建更新字段列表
 	fields := []string{
-		lowerFirst(option.FieldPath),
-		lowerFirst(option.FieldLen),
+		lowerFirst(option.FieldPath, option.FieldStyle),
+		lowerFirst(option.FieldLen, option.FieldStyle),
 	}
 	for _, jf := range option.JoinFields {
-		fields = append(fields, lowerFirst(jf.Target))
+		fields = append(fields, lowerFirst(jf.Target, option.FieldStyle))
 	}
 
 	// 构造更新字段 map
