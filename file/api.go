@@ -7,8 +7,10 @@
 package file
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Mkdir 创建目录
@@ -142,4 +144,126 @@ func WriteText(path string, content string) error {
 		[]byte(content),
 		0644,
 	)
+}
+
+// Zip 压缩
+func Zip(src []string, dst string, method ...string) (string, error) {
+
+	if len(src) == 0 {
+		return "", fmt.Errorf("没有需要压缩的文件")
+	}
+
+	zipMethod := "zip"
+
+	if len(method) > 0 && method[0] != "" {
+		zipMethod = strings.ToLower(method[0])
+	}
+
+	dst = buildArchivePath(
+		src,
+		dst,
+		zipMethod,
+	)
+
+	switch zipMethod {
+
+	case "zip":
+		return zipFileCreate(src, dst)
+
+	case "tar":
+		return tarCreate(src, dst)
+
+	case "tar.gz", "tgz":
+		return tarGzCreate(src, dst)
+
+	default:
+		return "", fmt.Errorf(
+			"不支持的压缩格式: %s",
+			zipMethod,
+		)
+	}
+}
+
+// Unzip 解压文件
+func Unzip(src string, dst ...string) error {
+
+	// 默认解压到压缩文件同目录下的同名文件夹
+	targetDir := ""
+
+	if len(dst) > 0 && dst[0] != "" {
+		targetDir = dst[0]
+	} else {
+		dir := filepath.Dir(src)
+		name := filepath.Base(src)
+
+		// 去除压缩扩展名
+		switch {
+		case strings.HasSuffix(name, ".tar.gz"):
+			name = strings.TrimSuffix(name, ".tar.gz")
+
+		case strings.HasSuffix(name, ".tgz"):
+			name = strings.TrimSuffix(name, ".tgz")
+
+		case strings.HasSuffix(name, ".tar"):
+			name = strings.TrimSuffix(name, ".tar")
+
+		case strings.HasSuffix(name, ".zip"):
+			name = strings.TrimSuffix(name, ".zip")
+
+		case strings.HasSuffix(name, ".gz"):
+			name = strings.TrimSuffix(name, ".gz")
+
+		case strings.HasSuffix(name, ".rar"):
+			name = strings.TrimSuffix(name, ".rar")
+
+		case strings.HasSuffix(name, ".7z"):
+			name = strings.TrimSuffix(name, ".7z")
+		}
+
+		targetDir = filepath.Join(dir, name)
+	}
+
+	// 如果目录已存在，自动改名
+	targetDir = uniquePath(targetDir)
+
+	// 创建目标目录
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		return err
+	}
+
+	ext := strings.ToLower(src)
+
+	switch {
+	case strings.HasSuffix(ext, ".zip"):
+		return unzipZip(src, targetDir)
+
+	case strings.HasSuffix(ext, ".tar.gz"),
+		strings.HasSuffix(ext, ".tgz"):
+		return unzipTarGz(src, targetDir)
+
+	case strings.HasSuffix(ext, ".tar"):
+		return unzipTar(src, targetDir)
+
+	case strings.HasSuffix(ext, ".gz"):
+		return unzipGzip(src, targetDir)
+
+	case strings.HasSuffix(ext, ".7z"):
+		return commandUnzip([]string{
+			"7z",
+			"x",
+			src,
+			"-o" + targetDir,
+		})
+
+	case strings.HasSuffix(ext, ".rar"):
+		return commandUnzip([]string{
+			"unrar",
+			"x",
+			src,
+			targetDir,
+		})
+
+	default:
+		return fmt.Errorf("不支持的压缩格式: %s", src)
+	}
 }
