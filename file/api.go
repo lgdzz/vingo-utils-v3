@@ -30,6 +30,12 @@ func Copy(src, dst string) (string, error) {
 		return "", err
 	}
 
+	// 目标是目录
+	if dstInfo, err := os.Stat(dst); err == nil && dstInfo.IsDir() {
+		dst = filepath.Join(dst, filepath.Base(src))
+	}
+
+	// 文件存在自动改名
 	dst = uniquePath(dst)
 
 	if info.IsDir() {
@@ -52,6 +58,11 @@ func Move(src, dst string) (string, error) {
 		return "", err
 	}
 
+	// 目标是目录
+	if dstInfo, err := os.Stat(dst); err == nil && dstInfo.IsDir() {
+		dst = filepath.Join(dst, filepath.Base(src))
+	}
+
 	dst = uniquePath(dst)
 
 	err := os.MkdirAll(filepath.Dir(dst), 0755)
@@ -61,19 +72,19 @@ func Move(src, dst string) (string, error) {
 
 	err = os.Rename(src, dst)
 
-	if err != nil {
-		// 跨磁盘 rename 失败，降级复制删除
-		newPath, err := Copy(src, dst)
-		if err != nil {
-			return "", err
-		}
-
-		err = Delete(src)
-
-		return newPath, err
+	if err == nil {
+		return dst, nil
 	}
 
-	return dst, nil
+	// 跨磁盘移动，降级复制删除
+	newPath, err := Copy(src, dst)
+	if err != nil {
+		return "", err
+	}
+
+	err = Delete(src)
+
+	return newPath, err
 }
 
 // Rename 重命名
