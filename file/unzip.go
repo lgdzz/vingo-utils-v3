@@ -12,6 +12,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -196,4 +197,52 @@ func commandUnzip(args []string) error {
 	}
 
 	return nil
+}
+
+func isArchiveFile(path string) (bool, string, error) {
+
+	file, err := os.Open(path)
+	if err != nil {
+		return false, "", err
+	}
+	defer file.Close()
+
+	// 读取文件头
+	buf := make([]byte, 512)
+
+	n, err := file.Read(buf)
+
+	if err != nil && err != io.EOF {
+		return false, "", err
+	}
+
+	buf = buf[:n]
+
+	kind := http.DetectContentType(buf)
+
+	switch kind {
+
+	case "application/zip":
+		return true, "zip", nil
+
+	case "application/x-gzip":
+		return true, "gzip", nil
+	}
+
+	// tar 没有固定mime，通过tar头判断
+	if isTar(buf) {
+		return true, "tar", nil
+	}
+
+	return false, "", nil
+}
+
+func isTar(buf []byte) bool {
+
+	if len(buf) < 262 {
+		return false
+	}
+
+	// ustar 标识
+	return string(buf[257:262]) == "ustar"
 }

@@ -186,6 +186,20 @@ func Zip(src []string, dst string, method ...string) (string, error) {
 
 // Unzip 解压文件
 func Unzip(src string, dst ...string) error {
+	ok, _, err := isArchiveFile(src)
+
+	if err != nil {
+		return err
+	}
+
+	if !ok {
+		return fmt.Errorf(
+			"文件不是压缩文件: %s",
+			src,
+		)
+	}
+
+	//fmt.Println("压缩类型:", kind)
 
 	// 默认解压到压缩文件同目录下的同名文件夹
 	targetDir := ""
