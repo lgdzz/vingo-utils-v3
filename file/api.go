@@ -13,9 +13,48 @@ import (
 	"strings"
 )
 
-// Mkdir 创建目录
-func Mkdir(path string, mode os.FileMode) error {
-	return os.MkdirAll(path, mode)
+// Mkdir 创建目录，如果存在自动重命名
+func Mkdir(path string, mode os.FileMode) (string, error) {
+
+	path = uniquePath(path)
+
+	err := os.MkdirAll(path, mode)
+
+	if err != nil {
+		return "", err
+	}
+
+	return path, nil
+}
+
+// CreateText 创建空白文本文件，如果存在自动重命名
+func CreateText(path string, mode os.FileMode) (string, error) {
+
+	path = uniquePath(path)
+
+	// 创建父目录
+	err := os.MkdirAll(
+		filepath.Dir(path),
+		0755,
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	file, err := os.OpenFile(
+		path,
+		os.O_CREATE|os.O_WRONLY,
+		mode,
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	defer file.Close()
+
+	return path, nil
 }
 
 // Chmod 设置文件或目录权限
