@@ -16,6 +16,7 @@ import (
 	"os/exec"
 	"runtime"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"time"
 
@@ -382,4 +383,37 @@ func FillTimeSeries(
 	}
 
 	return result
+}
+
+// NextVersion 四段版本号自增
+func NextVersion(v string) string {
+	if v == "" {
+		return "0.0.0.1"
+	}
+
+	parts := strings.Split(v, ".")
+
+	nums := []int{0, 0, 0, 0}
+
+	for i := 0; i < len(parts) && i < 4; i++ {
+		nums[i], _ = strconv.Atoi(parts[i])
+	}
+
+	// 从最后一位开始进位
+	for i := 3; i >= 0; i-- {
+		nums[i]++
+
+		if nums[i] < 10 {
+			break
+		}
+
+		nums[i] = 0
+	}
+
+	return fmt.Sprintf("%d.%d.%d.%d",
+		nums[0],
+		nums[1],
+		nums[2],
+		nums[3],
+	)
 }

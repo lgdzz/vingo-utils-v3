@@ -320,3 +320,37 @@ func Unzip(src string, dst ...string) error {
 		return fmt.Errorf("不支持的压缩格式: %s", src)
 	}
 }
+
+// Size 获取文件或文件夹大小（字节）
+func Size(path string) (int64, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return 0, err
+	}
+
+	// 文件
+	if !info.IsDir() {
+		return info.Size(), nil
+	}
+
+	// 目录
+	var size int64
+
+	err = filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() {
+			size += info.Size()
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return 0, err
+	}
+
+	return size, nil
+}
