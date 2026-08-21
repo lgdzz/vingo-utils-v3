@@ -88,7 +88,7 @@ func NewPgsqlAdapter(db *gorm.DB) *PgsqlAdapter {
 }
 
 func (s *PgsqlAdapter) GetDatabases() ([]DatabaseInfo, error) {
-	var databases []DatabaseInfo
+	var databases = make([]DatabaseInfo, 0)
 
 	err := s.db.Raw(`
 		SELECT
@@ -105,32 +105,35 @@ func (s *PgsqlAdapter) GetDatabases() ([]DatabaseInfo, error) {
 }
 
 func (s *PgsqlAdapter) GetTables() ([]TableInfo, error) {
-	var tables []TableInfo
+	var tables = make([]TableInfo, 0)
 
 	err := s.db.Raw(`
 		SELECT
-			t.table_name AS name,
-			t.table_schema AS "schema",
-			t.table_type AS type,
+			c.relname AS name,
+			n.nspname AS "schema",
+			CASE
+				WHEN c.relkind = 'r' THEN 'BASE TABLE'
+				WHEN c.relkind = 'p' THEN 'PARTITIONED TABLE'
+				ELSE c.relkind::text
+			END AS type,
 			COALESCE(obj_description(c.oid, 'pg_class'), '') AS comment,
 			COALESCE(c.reltuples::bigint, 0) AS "rows",
-			COALESCE(pg_total_relation_size(c.oid), 0) AS size
-		FROM information_schema.tables t
-		LEFT JOIN pg_namespace n
-			ON n.nspname = t.table_schema
-		LEFT JOIN pg_class c
-			ON c.relname = t.table_name
-			AND c.relnamespace = n.oid
-		WHERE t.table_schema = current_schema()
-		  AND t.table_type = 'BASE TABLE'
-		ORDER BY t.table_name
+			COALESCE(pg_total_relation_size(c.oid), 0) AS size,
+			'' AS charset,
+			'' AS collation
+		FROM pg_class c
+		JOIN pg_namespace n
+			ON n.oid = c.relnamespace
+		WHERE c.relkind IN ('r', 'p')
+		  AND n.nspname = current_schema()
+		ORDER BY c.relname
 	`).Scan(&tables).Error
 
 	return tables, err
 }
 
 func (s *PgsqlAdapter) GetColumns(tableName string) ([]Column, error) {
-	var columns []Column
+	var columns = make([]Column, 0)
 	queryColumn := `
 			SELECT 
 				a.attname AS field,

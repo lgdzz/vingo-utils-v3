@@ -95,7 +95,7 @@ func NewMysqlAdapter(db *gorm.DB) *MysqlAdapter {
 }
 
 func (s *MysqlAdapter) GetDatabases() ([]DatabaseInfo, error) {
-	var databases []DatabaseInfo
+	var databases = make([]DatabaseInfo, 0)
 
 	err := s.db.Raw(`
 		SELECT
@@ -117,7 +117,7 @@ func (s *MysqlAdapter) GetDatabases() ([]DatabaseInfo, error) {
 }
 
 func (s *MysqlAdapter) GetTables() ([]TableInfo, error) {
-	var tables []TableInfo
+	var tables = make([]TableInfo, 0)
 
 	err := s.db.Raw(`
 		SELECT
@@ -138,7 +138,7 @@ func (s *MysqlAdapter) GetTables() ([]TableInfo, error) {
 }
 
 func (s *MysqlAdapter) GetColumns(tableName string) ([]Column, error) {
-	var columns []Column
+	var columns = make([]Column, 0)
 	err := s.db.Raw(fmt.Sprintf("SHOW FULL COLUMNS FROM `%v`", tableName)).Scan(&columns).Error
 	if err == nil {
 		columns = slice.Map(columns, func(index int, item Column) Column {
