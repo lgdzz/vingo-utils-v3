@@ -13,7 +13,11 @@ import (
 type Adapter interface {
 	GetDatabaseName() (string, error)
 	GetTableComment(dbName, tableName string) (string, error)
-	GetColumns(tableName string) ([]Column, error)
+
+	GetDatabases() ([]DatabaseInfo, error)         // 查询数据库列表
+	GetTables() ([]TableInfo, error)               // 查询数据库数据表列表
+	GetColumns(tableName string) ([]Column, error) // 查询数据库数据表字段列表
+	GetTableDDL(tableName string) (string, error)
 
 	Book() string                                  // 数据库字典
 	ModelFiles(tableNames ...string) (bool, error) // 模型文件

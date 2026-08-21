@@ -94,19 +94,47 @@ func NewMysqlAdapter(db *gorm.DB) *MysqlAdapter {
 	return &MysqlAdapter{db: db}
 }
 
-func (s *MysqlAdapter) GetDatabaseName() (string, error) {
-	var dbName string
-	err := s.db.Raw("SELECT DATABASE()").Scan(&dbName).Error
-	return dbName, err
+func (s *MysqlAdapter) GetDatabases() ([]DatabaseInfo, error) {
+	var databases []DatabaseInfo
+
+	err := s.db.Raw(`
+		SELECT
+			s.SCHEMA_NAME AS name,
+			s.DEFAULT_CHARACTER_SET_NAME AS charset,
+			s.DEFAULT_COLLATION_NAME AS collation,
+			COALESCE(SUM(t.DATA_LENGTH + t.INDEX_LENGTH), 0) AS size
+		FROM information_schema.SCHEMATA s
+		LEFT JOIN information_schema.TABLES t
+			ON s.SCHEMA_NAME = t.TABLE_SCHEMA
+		GROUP BY
+			s.SCHEMA_NAME,
+			s.DEFAULT_CHARACTER_SET_NAME,
+			s.DEFAULT_COLLATION_NAME
+		ORDER BY s.SCHEMA_NAME
+	`).Scan(&databases).Error
+
+	return databases, err
 }
 
-func (s *MysqlAdapter) GetTableComment(dbName, tableName string) (string, error) {
-	var tableComment string
-	err := s.db.Table("information_schema.tables").
-		Where("table_schema=? AND table_name=?", dbName, tableName).
-		Select("table_comment").
-		Scan(&tableComment).Error
-	return tableComment, err
+func (s *MysqlAdapter) GetTables() ([]TableInfo, error) {
+	var tables []TableInfo
+
+	err := s.db.Raw(`
+		SELECT
+			TABLE_NAME AS name,
+			TABLE_SCHEMA AS ` + "`schema`" + `,
+			TABLE_TYPE AS type,
+			TABLE_COMMENT AS comment,
+			COALESCE(TABLE_ROWS, 0) AS ` + "`rows`" + `,
+			COALESCE(DATA_LENGTH + INDEX_LENGTH, 0) AS size,
+			TABLE_COLLATION AS collation
+		FROM information_schema.TABLES
+		WHERE TABLE_SCHEMA = DATABASE()
+		  AND TABLE_TYPE = 'BASE TABLE'
+		ORDER BY TABLE_NAME
+	`).Scan(&tables).Error
+
+	return tables, err
 }
 
 func (s *MysqlAdapter) GetColumns(tableName string) ([]Column, error) {
@@ -129,6 +157,38 @@ func (s *MysqlAdapter) GetColumns(tableName string) ([]Column, error) {
 		})
 	}
 	return columns, err
+}
+
+func (s *MysqlAdapter) GetTableDDL(table string) (string, error) {
+	table = strings.ReplaceAll(table, "`", "``")
+
+	row := s.db.Raw(
+		"SHOW CREATE TABLE `" + table + "`",
+	).Row()
+
+	var tableName string
+	var createSQL string
+
+	if err := row.Scan(&tableName, &createSQL); err != nil {
+		return "", err
+	}
+
+	return createSQL, nil
+}
+
+func (s *MysqlAdapter) GetDatabaseName() (string, error) {
+	var dbName string
+	err := s.db.Raw("SELECT DATABASE()").Scan(&dbName).Error
+	return dbName, err
+}
+
+func (s *MysqlAdapter) GetTableComment(dbName, tableName string) (string, error) {
+	var tableComment string
+	err := s.db.Table("information_schema.tables").
+		Where("table_schema=? AND table_name=?", dbName, tableName).
+		Select("table_comment").
+		Scan(&tableComment).Error
+	return tableComment, err
 }
 
 // Book 数据库字典

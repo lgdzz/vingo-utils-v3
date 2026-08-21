@@ -87,25 +87,46 @@ func NewPgsqlAdapter(db *gorm.DB) *PgsqlAdapter {
 	return &PgsqlAdapter{db: db}
 }
 
-func (s *PgsqlAdapter) GetDatabaseName() (string, error) {
-	var dbName string
-	err := s.db.Raw("SELECT current_database()").Scan(&dbName).Error
-	return dbName, err
+func (s *PgsqlAdapter) GetDatabases() ([]DatabaseInfo, error) {
+	var databases []DatabaseInfo
+
+	err := s.db.Raw(`
+		SELECT
+			d.datname AS name,
+			pg_encoding_to_char(d.encoding) AS charset,
+			d.datcollate AS collation,
+			pg_database_size(d.datname) AS size
+		FROM pg_database d
+		WHERE d.datallowconn = true
+		ORDER BY d.datname
+	`).Scan(&databases).Error
+
+	return databases, err
 }
 
-func (s *PgsqlAdapter) GetTableComment(dbName, tableName string) (string, error) {
-	var tableComment sql.NullString
-	queryTableComment := `SELECT obj_description(c.oid, 'pg_class') 
-                          FROM pg_class c 
-                          WHERE relname = ?`
-	err := s.db.Raw(queryTableComment, tableName).Scan(&tableComment).Error
-	if err != nil {
-		return "", err
-	}
-	if tableComment.Valid {
-		return tableComment.String, nil
-	}
-	return "", nil // 表注释为空
+func (s *PgsqlAdapter) GetTables() ([]TableInfo, error) {
+	var tables []TableInfo
+
+	err := s.db.Raw(`
+		SELECT
+			t.table_name AS name,
+			t.table_schema AS "schema",
+			t.table_type AS type,
+			COALESCE(obj_description(c.oid, 'pg_class'), '') AS comment,
+			COALESCE(c.reltuples::bigint, 0) AS "rows",
+			COALESCE(pg_total_relation_size(c.oid), 0) AS size
+		FROM information_schema.tables t
+		LEFT JOIN pg_namespace n
+			ON n.nspname = t.table_schema
+		LEFT JOIN pg_class c
+			ON c.relname = t.table_name
+			AND c.relnamespace = n.oid
+		WHERE t.table_schema = current_schema()
+		  AND t.table_type = 'BASE TABLE'
+		ORDER BY t.table_name
+	`).Scan(&tables).Error
+
+	return tables, err
 }
 
 func (s *PgsqlAdapter) GetColumns(tableName string) ([]Column, error) {
@@ -147,6 +168,52 @@ func (s *PgsqlAdapter) GetColumns(tableName string) ([]Column, error) {
 	}
 
 	return columns, err
+}
+
+func (s *PgsqlAdapter) GetTableDDL(table string) (string, error) {
+	table = strings.ReplaceAll(table, "`", "``")
+
+	row := s.db.Raw(
+		"SHOW CREATE TABLE `" + table + "`",
+	).Row()
+
+	var tableName string
+	var createSQL string
+
+	if err := row.Scan(&tableName, &createSQL); err != nil {
+		return "", err
+	}
+
+	return createSQL, nil
+}
+
+func quoteIdentifier(s string) string {
+	return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
+}
+
+func quoteLiteral(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", "''") + "'"
+}
+
+func (s *PgsqlAdapter) GetDatabaseName() (string, error) {
+	var dbName string
+	err := s.db.Raw("SELECT current_database()").Scan(&dbName).Error
+	return dbName, err
+}
+
+func (s *PgsqlAdapter) GetTableComment(dbName, tableName string) (string, error) {
+	var tableComment sql.NullString
+	queryTableComment := `SELECT obj_description(c.oid, 'pg_class') 
+                          FROM pg_class c 
+                          WHERE relname = ?`
+	err := s.db.Raw(queryTableComment, tableName).Scan(&tableComment).Error
+	if err != nil {
+		return "", err
+	}
+	if tableComment.Valid {
+		return tableComment.String, nil
+	}
+	return "", nil // 表注释为空
 }
 
 // Book 数据库字典

@@ -30,6 +30,24 @@ type Common struct {
 	*gorm.DB
 }
 
+type DatabaseInfo struct {
+	Name      string `json:"name"`      // 数据库名称
+	Charset   string `json:"charset"`   // 字符集
+	Collation string `json:"collation"` // 排序规则
+	Size      int64  `json:"size"`      // 数据库大小，单位 byte
+}
+
+type TableInfo struct {
+	Name      string `json:"name"`
+	Schema    string `json:"schema"`
+	Type      string `json:"type"`
+	Comment   string `json:"comment"`
+	Rows      int64  `json:"rows"`
+	Size      int64  `json:"size"`
+	Charset   string `json:"charset"`
+	Collation string `json:"collation"`
+}
+
 type Table struct {
 	TableName    string
 	ModelName    string
