@@ -140,28 +140,38 @@ func (s *PgsqlAdapter) GetColumns(tableName string) ([]Column, error) {
 			a.attname AS field,
 			format_type(a.atttypid, a.atttypmod) AS type,
 			col_description(a.attrelid, a.attnum) AS comment,
+
 			CASE 
 				WHEN a.attnotnull THEN 'NO' 
 				ELSE 'YES' 
 			END AS null,
-			CASE 
+
+			CASE
 				WHEN EXISTS (
 					SELECT 1
 					FROM pg_index i
 					WHERE i.indrelid = a.attrelid
-					  AND i.indisprimary
+					  AND (
+						  i.indisprimary
+						  OR i.indisunique
+					  )
 					  AND a.attnum = ANY(i.indkey)
 				)
 				THEN true
 				ELSE false
 			END AS is_pk
+
 		FROM pg_attribute a
-		JOIN pg_class c ON a.attrelid = c.oid
-		JOIN pg_namespace n ON c.relnamespace = n.oid
+		JOIN pg_class c 
+			ON a.attrelid = c.oid
+		JOIN pg_namespace n 
+			ON c.relnamespace = n.oid
+
 		WHERE 
 			c.relname = ?
 			AND a.attnum > 0
 			AND NOT a.attisdropped
+
 		ORDER BY a.attnum
 	`
 
@@ -178,7 +188,16 @@ func (s *PgsqlAdapter) GetColumns(tableName string) ([]Column, error) {
 			case strutil.ContainsAny(t, []string{"date", "datetime", "timestamp"}):
 				item.BusinessType = "datetime"
 
-			case strutil.ContainsAny(t, []string{"int", "bigint", "float", "double", "decimal"}):
+			case strutil.ContainsAny(t, []string{
+				"int",
+				"bigint",
+				"smallint",
+				"integer",
+				"float",
+				"double",
+				"decimal",
+				"numeric",
+			}):
 				item.BusinessType = "number"
 
 			default:
