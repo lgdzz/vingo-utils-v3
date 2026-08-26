@@ -134,38 +134,57 @@ func (s *PgsqlAdapter) GetTables() ([]TableInfo, error) {
 
 func (s *PgsqlAdapter) GetColumns(tableName string) ([]Column, error) {
 	var columns = make([]Column, 0)
+
 	queryColumn := `
-			SELECT 
-				a.attname AS field,
-				format_type(a.atttypid, a.atttypmod) AS type,
-				col_description(a.attrelid, a.attnum) AS comment,
-				CASE WHEN a.attnotnull THEN 'NO' ELSE 'YES' END AS null
-			FROM 
-				pg_attribute a
-			JOIN 
-				pg_class c ON a.attrelid = c.oid
-			JOIN 
-				pg_namespace n ON c.relnamespace = n.oid
-			WHERE 
-				c.relname = ? 
-				AND a.attnum > 0 
-				AND NOT a.attisdropped
-		`
+		SELECT 
+			a.attname AS field,
+			format_type(a.atttypid, a.atttypmod) AS type,
+			col_description(a.attrelid, a.attnum) AS comment,
+			CASE 
+				WHEN a.attnotnull THEN 'NO' 
+				ELSE 'YES' 
+			END AS null,
+			CASE 
+				WHEN EXISTS (
+					SELECT 1
+					FROM pg_index i
+					WHERE i.indrelid = a.attrelid
+					  AND i.indisprimary
+					  AND a.attnum = ANY(i.indkey)
+				)
+				THEN true
+				ELSE false
+			END AS is_pk
+		FROM pg_attribute a
+		JOIN pg_class c ON a.attrelid = c.oid
+		JOIN pg_namespace n ON c.relnamespace = n.oid
+		WHERE 
+			c.relname = ?
+			AND a.attnum > 0
+			AND NOT a.attisdropped
+		ORDER BY a.attnum
+	`
+
 	err := s.db.Raw(queryColumn, tableName).Scan(&columns).Error
 
 	if err == nil {
 		columns = slice.Map(columns, func(index int, item Column) Column {
-			t := strings.ToLower(item.Type) // 统一小写
+			t := strings.ToLower(item.Type)
+
 			switch {
 			case strutil.ContainsAny(t, []string{"bool", "tinyint(1)"}):
 				item.BusinessType = "bool"
+
 			case strutil.ContainsAny(t, []string{"date", "datetime", "timestamp"}):
 				item.BusinessType = "datetime"
+
 			case strutil.ContainsAny(t, []string{"int", "bigint", "float", "double", "decimal"}):
 				item.BusinessType = "number"
+
 			default:
 				item.BusinessType = "string"
 			}
+
 			return item
 		})
 	}

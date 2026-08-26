@@ -68,6 +68,7 @@ type Column struct {
 	DataName     string
 	DataType     string
 	JsonName     string
+	IsPk         bool
 	BusinessType string // 业务类型：number、string、bool、datetime
 }
 

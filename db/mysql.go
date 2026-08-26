@@ -143,6 +143,10 @@ func (s *MysqlAdapter) GetColumns(tableName string) ([]Column, error) {
 	if err == nil {
 		columns = slice.Map(columns, func(index int, item Column) Column {
 			t := strings.ToLower(item.Type) // 统一小写
+
+			// 是否主键
+			item.IsPk = strings.EqualFold(item.Key, "PRI")
+			
 			switch {
 			case strutil.ContainsAny(t, []string{"bool", "tinyint(1)"}):
 				item.BusinessType = "bool"
