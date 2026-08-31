@@ -181,7 +181,8 @@ func (c *Context) ResponseExchangeEncode(data any) {
 	}
 
 	c.Response(&ResponseData{
-		Data: cryptor.ExchangeEncode(value, 1),
+		Secret: true,
+		Data:   cryptor.ExchangeEncode(value, 1),
 	})
 }
 
@@ -504,6 +505,7 @@ type ResponseData struct {
 	ErrorType string // 错误类型
 	Message   string // 消息
 	Data      any    // 返回数据内容
+	Secret    bool   // 是否加密
 	NoLog     bool   // true时不记录日志
 }
 
