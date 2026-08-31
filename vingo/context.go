@@ -14,6 +14,7 @@ import (
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/lgdzz/vingo-utils-v3/cryptor"
 )
 
 type FunctionModule struct {
@@ -164,6 +165,14 @@ func (c *Context) ResponseBase64(data ...any) {
 			panic(fmt.Sprintf("Error marshaling data: %v", err))
 		}
 		c.Response(&ResponseData{Data: base64.StdEncoding.EncodeToString(byteData)})
+	}
+}
+
+func (c *Context) ResponseExchangeEncode(data string) {
+	if len(data) == 0 {
+		c.Response(&ResponseData{})
+	} else {
+		c.Response(&ResponseData{Data: cryptor.ExchangeEncode(data, 1)})
 	}
 }
 
