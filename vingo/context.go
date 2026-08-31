@@ -169,11 +169,7 @@ func (c *Context) ResponseBase64(data ...any) {
 }
 
 func (c *Context) ResponseExchangeEncode(data string) {
-	if len(data) == 0 {
-		c.Response(&ResponseData{})
-	} else {
-		c.Response(&ResponseData{Data: cryptor.ExchangeEncode(data, 1)})
-	}
+	c.Response(&ResponseData{Data: cryptor.ExchangeEncode(data, 1)})
 }
 
 // ShieldRobots 屏蔽搜索引擎爬虫
