@@ -168,8 +168,21 @@ func (c *Context) ResponseBase64(data ...any) {
 	}
 }
 
-func (c *Context) ResponseExchangeEncode(data string) {
-	c.Response(&ResponseData{Data: cryptor.ExchangeEncode(data, 1)})
+func (c *Context) ResponseExchangeEncode(data any) {
+	var value string
+
+	switch v := data.(type) {
+	case string:
+		value = v
+	case []byte:
+		value = string(v)
+	default:
+		value = JsonToString(data)
+	}
+
+	c.Response(&ResponseData{
+		Data: cryptor.ExchangeEncode(value, 1),
+	})
 }
 
 // ShieldRobots 屏蔽搜索引擎爬虫
