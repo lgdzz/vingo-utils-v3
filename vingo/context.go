@@ -136,6 +136,7 @@ func (c *Context) Response(d *ResponseData) {
 		"uuid":      uuid,
 		"error":     d.Error,
 		"message":   d.Message,
+		"s":         d.Secret,
 		"data":      d.Data,
 		"timestamp": time.Now().Unix(),
 	})
