@@ -4,13 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -217,53 +215,6 @@ func PostJSONStream(url string, body interface{}, opt Option, receive func(...by
 		}
 		receive(buf[:n]...)
 	}
-}
-
-func DownloadFile(fileUrl string, saveDir string, randomName bool) string {
-	parsedUrl, err := url.Parse(fileUrl)
-	if err != nil {
-		panic(err)
-	}
-
-	fileName := ""
-	if randomName {
-		fileName = vingo.GetUUID() + path.Ext(parsedUrl.Path)
-	} else {
-		fileName = path.Base(parsedUrl.Path)
-	}
-
-	err = os.MkdirAll(saveDir, 0777)
-	if err != nil {
-		panic(err)
-	}
-
-	savePath := filepath.Join(saveDir, fileName)
-
-	out, err := os.Create(savePath)
-	if err != nil {
-		panic(err)
-	}
-	defer out.Close()
-
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-
-	resp, err := client.Get(fileUrl)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		panic(fmt.Sprintf("server returned non-200: %v", resp.StatusCode))
-	}
-
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		panic(err)
-	}
-	return savePath
 }
 
 // -------------------- 内部工具方法 --------------------
