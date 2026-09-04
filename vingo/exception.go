@@ -2,9 +2,10 @@ package vingo
 
 import (
 	"fmt"
+	"runtime/debug"
+
 	"github.com/gin-gonic/gin"
 	"github.com/lgdzz/vingo-utils-exception/exception"
-	"runtime/debug"
 )
 
 // ExceptionHandler 异常处理

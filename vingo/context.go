@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/url"
 	"os"
-	"runtime/debug"
 	"strings"
 	"time"
 
@@ -85,51 +84,54 @@ func (c *Context) Response(d *ResponseData) {
 	if d.Status == 0 {
 		d.Status = 200
 	}
+
+	c.Context.Set("responseMessage", d.Message)
+
 	uuid := c.GetString("requestUUID")
 
-	startTime := c.GetTime("requestStart")
-	method := c.Request.Method
-	url_ := c.UrlDecode()
-	uri_ := c.Request.RequestURI
-
-	userAgent := c.GetHeader("User-Agent")
-	clientIp := c.GetString("clientIp")
-	user := c.GetString("user")
-	body := c.GetString("requestBody")
-
-	errorType := d.ErrorType
-	errorMsg := ""
-	if d.Error == 1 {
-		errorMsg = d.Message
-	}
+	//startTime := c.GetTime("requestStart")
+	//method := c.Request.Method
+	//url_ := c.UrlDecode()
+	//uri_ := c.Request.RequestURI
+	//
+	//userAgent := c.GetHeader("User-Agent")
+	//clientIp := c.GetString("clientIp")
+	//user := c.GetString("user")
+	//body := c.GetString("requestBody")
+	//
+	//errorType := d.ErrorType
+	//errorMsg := ""
+	//if d.Error == 1 {
+	//	errorMsg = d.Message
+	//}
 
 	if !d.NoLog {
 		// 记录请求日志
-		go func() {
-			defer ExceptionCatch("记录请求日志异常", false)
-			endTime := time.Now()
-			latency := endTime.Sub(startTime)
-			millisecond := float64(latency.Nanoseconds()) / float64(time.Millisecond)
-			duration := fmt.Sprintf("%.3fms", millisecond)
-			if millisecond > 300 {
-				duration += ":慢接口"
-			}
-
-			if method == "GET" {
-				LogRequest(duration, fmt.Sprintf("{\"uuid\":\"%v\",\"method\":\"%v\",\"url\":\"%v\",\"err\":\"%v\",\"errType\":\"%v\",\"userAgent\":\"%v\",\"clientIP\":\"%v\",\"user\":\"%v\"}", uuid, method, url_, errorMsg, errorType, userAgent, clientIp, user))
-			} else {
-				bodyVal := body
-				if bodyVal == "" {
-					bodyVal = "\"\""
-				}
-
-				LogRequest(duration, fmt.Sprintf("{\"uuid\":\"%v\",\"method\":\"%v\",\"url\":\"%v\",\"body\":%v,\"err\":\"%v\",\"errType\":\"%v\",\"userAgent\":\"%v\",\"clientIP\":\"%v\",\"user\":\"%v\"}", uuid, method, uri_, bodyVal, errorMsg, errorType, userAgent, clientIp, user))
-			}
-
-			if errorType == "异常错误" {
-				LogError(string(debug.Stack()))
-			}
-		}()
+		//go func() {
+		//	defer ExceptionCatch("记录请求日志异常", false)
+		//	endTime := time.Now()
+		//	latency := endTime.Sub(startTime)
+		//	millisecond := float64(latency.Nanoseconds()) / float64(time.Millisecond)
+		//	duration := fmt.Sprintf("%.3fms", millisecond)
+		//	if millisecond > 300 {
+		//		duration += ":慢接口"
+		//	}
+		//
+		//	if method == "GET" {
+		//		logs.Request(duration, fmt.Sprintf("{\"uuid\":\"%v\",\"method\":\"%v\",\"url\":\"%v\",\"err\":\"%v\",\"errType\":\"%v\",\"userAgent\":\"%v\",\"clientIP\":\"%v\",\"user\":\"%v\"}", uuid, method, url_, errorMsg, errorType, userAgent, clientIp, user))
+		//	} else {
+		//		bodyVal := body
+		//		if bodyVal == "" {
+		//			bodyVal = "\"\""
+		//		}
+		//
+		//		logs.Request(duration, fmt.Sprintf("{\"uuid\":\"%v\",\"method\":\"%v\",\"url\":\"%v\",\"body\":%v,\"err\":\"%v\",\"errType\":\"%v\",\"userAgent\":\"%v\",\"clientIP\":\"%v\",\"user\":\"%v\"}", uuid, method, uri_, bodyVal, errorMsg, errorType, userAgent, clientIp, user))
+		//	}
+		//
+		//	if errorType == "异常错误" {
+		//		logs.Error(string(debug.Stack()))
+		//	}
+		//}()
 	}
 
 	c.JSON(d.Status, gin.H{

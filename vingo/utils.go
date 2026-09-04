@@ -7,6 +7,7 @@
 package vingo
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -174,6 +175,19 @@ func JsonToString(data any) string {
 		panic(err.Error())
 	}
 	return string(output)
+}
+
+func JsonToStringRaw(v any) string {
+	var buf bytes.Buffer
+
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+
+	if err := encoder.Encode(v); err != nil {
+		panic(err.Error())
+	}
+
+	return strings.TrimSuffix(buf.String(), "\n")
 }
 
 // StringToJson 字符串转结构体
