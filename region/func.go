@@ -108,3 +108,8 @@ func (s *Region) GetSonNodes(code string) []NodeBase {
 		return item.NodeBase
 	})
 }
+
+func (s *Region) IsExist(nodes []Node, code string) bool {
+	node := (&Region{Nodes: nodes}).findNodeByCode(code)
+	return node != nil
+}
