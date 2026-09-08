@@ -56,6 +56,7 @@ func requestLog(c *gin.Context) {
 			"clientIP":        c.ClientIP(),
 			"requestBody":     c.GetString("requestBody"),
 			"responseMessage": c.GetString("responseMessage"),
+			"user":            c.GetString("user"),
 		}),
 	)
 }
