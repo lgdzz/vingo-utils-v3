@@ -191,7 +191,6 @@ func (s *Region) Create(parentCode string, code string, name string) {
 			Code: code,
 			Name: name,
 		},
-		Children: make([]Node, 0),
 	}
 
 	parent := s.findNodeByCode(parentCode)

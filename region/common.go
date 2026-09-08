@@ -68,19 +68,25 @@ func (s *Region) findNodeByCode(code string) *Node {
 
 	for _, p := range path {
 		found := false
-		for _, v := range current {
-			if v.Code == p {
-				if p == code {
-					return &v
-				}
-				current = v.Children
-				found = true
-				break
+
+		for i := range current {
+			if current[i].Code != p {
+				continue
 			}
+
+			if p == code {
+				return &current[i]
+			}
+
+			current = current[i].Children
+			found = true
+			break
 		}
+
 		if !found {
 			return nil
 		}
 	}
+
 	return nil
 }
