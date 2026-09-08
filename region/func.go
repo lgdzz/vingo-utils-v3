@@ -115,8 +115,23 @@ func (s *Region) GetSonNodes(code string) []NodeBase {
 }
 
 func (s *Region) IsExist(nodes []Node, code string) bool {
-	node := (&Region{Nodes: nodes}).findNodeByCode(code)
-	return node != nil
+	var exists func(nodes []Node) bool
+
+	exists = func(nodes []Node) bool {
+		for _, node := range nodes {
+			if node.Code == code {
+				return true
+			}
+
+			if len(node.Children) > 0 && exists(node.Children) {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	return exists(nodes)
 }
 
 // CodeUniqueCheck 唯一检测
