@@ -27,7 +27,7 @@ type Config struct {
 	Driver         string            `yaml:"driver" json:"driver"`
 	Secret         string            `yaml:"secret" json:"secret"` // ciphertext类型字段key
 	Debug          bool              `yaml:"debug" json:"debug"`
-	InitAfter      func(tx *gorm.DB) // 初始化之后
+	InitAfter      func(tx *gorm.DB) `json:"-"` // 初始化之后
 }
 
 func (s *Config) StringValue(value *string, defaultValue string) {
