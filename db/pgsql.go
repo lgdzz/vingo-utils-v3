@@ -1,7 +1,7 @@
 // *****************************************************************************
 // 作者: lgdz
 // 创建时间: 2025/6/25
-// 描述：pgsql数据
+// 描述：pgsql数据库
 // *****************************************************************************
 
 package db
@@ -226,14 +226,6 @@ func (s *PgsqlAdapter) GetTableDDL(table string) (string, error) {
 	}
 
 	return createSQL, nil
-}
-
-func quoteIdentifier(s string) string {
-	return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
-}
-
-func quoteLiteral(s string) string {
-	return "'" + strings.ReplaceAll(s, "'", "''") + "'"
 }
 
 func (s *PgsqlAdapter) GetDatabaseName() (string, error) {
