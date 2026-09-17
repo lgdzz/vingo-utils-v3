@@ -65,7 +65,8 @@ func (s *PageOrder) HandleColumn() string {
 		if seg == "" {
 			panic("字段名非法")
 		}
-		segments[i] = "`" + seg + "`"
+		//segments[i] = "`" + seg + "`"
+		segments[i] = "\"" + seg + "\""
 	}
 	return fmt.Sprintf("%s %s", strings.Join(segments, "."), sort)
 }
@@ -99,7 +100,7 @@ func (s *QueryOption[T]) BuildOrderString() string {
 		if s.Query.OrderRaw != nil {
 			return *s.Query.OrderRaw
 		}
-		return "`id` desc"
+		return "id desc"
 	}
 	if s.Query.Order != nil {
 		s.Orders = &[]PageOrder{*s.Query.Order}
@@ -155,6 +156,19 @@ func NewPage[T any](option QueryOption[T]) PageResult {
 		result.Items = records
 	}
 	return result
+}
+
+func test(db *gorm.DB, name string) string {
+	switch db.Dialector.Name() {
+	case "mysql":
+		return "`" + strings.ReplaceAll(name, "`", "``") + "`"
+
+	case "postgres":
+		return `"` + strings.ReplaceAll(name, `"`, `""`) + `"`
+
+	default:
+		return name
+	}
 }
 
 func NewPageNormalHandle[T any](option QueryOption[T], result *PageResult) []T {

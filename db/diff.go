@@ -236,7 +236,7 @@ func (s *DiffBox[T]) DiffLog(tx *gorm.DB, result any) {
 	if len(out) > 0 {
 		tableName := out[0].Interface()
 		pk := reflect.ValueOf(s.Old).Elem().FieldByName("Id").Interface()
-		tx.Where("target=? AND `pk`=?", tableName, pk).Order("id desc").Find(result)
+		tx.Where("target=? AND pk=?", tableName, pk).Order("id desc").Find(result)
 	}
 
 }
