@@ -255,6 +255,9 @@ func (c *Context) SetOrgTypeIds(value []int) {
 func (c *Context) SetOrgTypeNames(value []string) {
 	c.Set("orgTypeNames", value)
 }
+func (c *Context) SetOrgRegionCode(value string) {
+	c.Set("orgRegionCode", value)
+}
 func (c *Context) SetDeptIds(value []int) {
 	c.Set("deptIds", value)
 }
@@ -306,6 +309,9 @@ func (c *Context) GetOrgTypeIds() []int {
 }
 func (c *Context) GetOrgTypeNames() []string {
 	return c.getTexts("orgTypeNames")
+}
+func (c *Context) GetOrgRegionCode() string {
+	return c.GetString("orgRegionCode")
 }
 func (c *Context) GetDeptIds() []int {
 	return c.getInts("deptIds")

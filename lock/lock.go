@@ -6,7 +6,10 @@
 
 package lock
 
-import "sync"
+import (
+	"strings"
+	"sync"
+)
 
 type Locker struct {
 	mu    sync.Mutex
@@ -19,8 +22,17 @@ func NewLocker() *Locker {
 	}
 }
 
+func (r *Locker) key(key string) string {
+	key = strings.TrimSpace(key)
+	if key == "" {
+		return "default"
+	}
+	return key
+}
+
 // getLock 获取指定区划对应的锁
 func (r *Locker) getLock(key string) *sync.Mutex {
+	key = r.key(key)
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
