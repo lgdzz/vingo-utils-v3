@@ -51,7 +51,9 @@ type PageOrder struct {
 	Sort   string `form:"sortOrder"` // asc 或 desc
 }
 
-func (s *PageOrder) HandleColumn() string {
+func (s *PageOrder) HandleColumn(tx *gorm.DB) string {
+	driver := tx.Dialector.Name()
+
 	sort := strings.ToLower(strings.TrimSpace(s.Sort))
 	if sort != "asc" && sort != "desc" {
 		panic("sortOrder 不合法，只允许 asc 或 desc")
@@ -65,8 +67,13 @@ func (s *PageOrder) HandleColumn() string {
 		if seg == "" {
 			panic("字段名非法")
 		}
-		//segments[i] = "`" + seg + "`"
-		segments[i] = "\"" + seg + "\""
+
+		switch driver {
+		case "postgres":
+			segments[i] = "\"" + seg + "\""
+		case "mysql":
+			segments[i] = "`" + seg + "`"
+		}
 	}
 	return fmt.Sprintf("%s %s", strings.Join(segments, "."), sort)
 }
@@ -107,7 +114,7 @@ func (s *QueryOption[T]) BuildOrderString() string {
 	}
 	var orders []string
 	for _, item := range *s.Orders {
-		orders = append(orders, item.HandleColumn())
+		orders = append(orders, item.HandleColumn(s.Db))
 	}
 	return strings.Join(orders, ", ")
 }

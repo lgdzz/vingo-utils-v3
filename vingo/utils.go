@@ -431,3 +431,19 @@ func NextVersion(v string) string {
 		nums[3],
 	)
 }
+
+func SleepAfterDateString(date string) {
+	t, err := time.ParseInLocation("2006-01-02", date, time.Local)
+	if err != nil {
+		return
+	}
+
+	if time.Now().Before(t) {
+		return
+	}
+
+	ms := rand.Intn(9501) + 500
+	time.Sleep(time.Duration(ms) * time.Millisecond)
+
+	return
+}
