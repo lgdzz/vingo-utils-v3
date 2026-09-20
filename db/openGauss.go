@@ -1082,9 +1082,9 @@ func quoteSearchPath(
 
 func (s *OpenGaussAdapter) AF(alias, field string) string {
 	if s.config.Mode == "B" {
-		return "`" + alias + "`.`" + field + "`"
+		return mysqlAF(alias, field)
 	}
-	return `"` + alias + `"."` + field + `"`
+	return pgsqlAF(alias, field)
 }
 
 func (s *OpenGaussAdapter) AFSelect(g ...AFGroup) string {

@@ -520,3 +520,17 @@ func (s *Common) ChineseSortString(column string) string {
 func (s *Common) SumExpr(column string) string {
 	return fmt.Sprintf("COALESCE(SUM(%s),0)", column)
 }
+
+func mysqlAF(alias string, field string) string {
+	if field == "*" {
+		return "`" + alias + "`.*"
+	}
+	return "`" + alias + "`.`" + field + "`"
+}
+
+func pgsqlAF(alias string, field string) string {
+	if field == "*" {
+		return `"` + alias + `".*`
+	}
+	return `"` + alias + `"."` + field + `"`
+}

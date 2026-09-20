@@ -487,9 +487,10 @@ func (s *KingBaseAdapter) Total(db *gorm.DB, exprMap map[string]string) map[stri
 
 func (s *KingBaseAdapter) AF(alias, field string) string {
 	if s.config.Mode == "mysql" {
-		return "`" + alias + "`.`" + field + "`"
+		return mysqlAF(alias, field)
 	}
-	return `"` + alias + `"."` + field + `"`
+
+	return pgsqlAF(alias, field)
 }
 
 func (s *KingBaseAdapter) AFSelect(g ...AFGroup) string {

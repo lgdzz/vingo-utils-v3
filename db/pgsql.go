@@ -479,7 +479,7 @@ func (s *PgsqlAdapter) Total(db *gorm.DB, exprMap map[string]string) map[string]
 }
 
 func (s *PgsqlAdapter) AF(alias, field string) string {
-	return `"` + alias + `"."` + field + `"`
+	return pgsqlAF(alias, field)
 }
 
 func (s *PgsqlAdapter) AFSelect(g ...AFGroup) string {

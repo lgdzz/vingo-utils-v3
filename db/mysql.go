@@ -413,7 +413,7 @@ func (s *MysqlAdapter) Total(db *gorm.DB, exprMap map[string]string) map[string]
 }
 
 func (s *MysqlAdapter) AF(alias, field string) string {
-	return "`" + alias + "`.`" + field + "`"
+	return mysqlAF(alias, field)
 }
 
 func (s *MysqlAdapter) AFSelect(g ...AFGroup) string {
