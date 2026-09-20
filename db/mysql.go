@@ -146,7 +146,7 @@ func (s *MysqlAdapter) GetColumns(tableName string) ([]Column, error) {
 
 			// 是否主键
 			item.IsPk = strings.EqualFold(item.Key, "PRI")
-			
+
 			switch {
 			case strutil.ContainsAny(t, []string{"bool", "tinyint(1)"}):
 				item.BusinessType = "bool"
@@ -410,4 +410,8 @@ func (s *MysqlAdapter) Total(db *gorm.DB, exprMap map[string]string) map[string]
 	db = db.Scan(&result)
 
 	return result
+}
+
+func (s *MysqlAdapter) AF(alias, field string) string {
+	return "`" + alias + "`.`" + field + "`"
 }

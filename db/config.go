@@ -24,7 +24,8 @@ type Config struct {
 	ConnectTimeout int               `yaml:"connectTimeout" json:"connectTimeout"`
 	MaxIdleConns   int               `yaml:"maxIdleConns" json:"maxIdleConns"`
 	MaxOpenConns   int               `yaml:"maxOpenConns" json:"maxOpenConns"`
-	Driver         string            `yaml:"driver" json:"driver"`
+	Driver         string            `yaml:"driver" json:"driver"` // 驱动：mysql、kingbase、openGauss
+	Mode           string            `yaml:"mode" json:"mode"`     // 兼容模式：可选
 	Secret         string            `yaml:"secret" json:"secret"` // ciphertext类型字段key
 	Debug          bool              `yaml:"debug" json:"debug"`
 	InitAfter      func(tx *gorm.DB) `json:"-"` // 初始化之后

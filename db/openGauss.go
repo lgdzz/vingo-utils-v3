@@ -10,6 +10,15 @@
 // 4. 主键一次查询，避免字段循环 N+1 SQL
 // 5. DDL 使用 openGauss 原生 pg_get_tabledef()
 // 6. 尽量兼容 PostgreSQL 风格 SQL
+// sql_compatibility
+// | 值    | 兼容对象       | 大致用途          |
+// | ---- | ---------- | ------------- |
+// | `A`  | Oracle     | Oracle 兼容     |
+// | `B`  | MySQL      | MySQL 兼容      |
+// | `C`  | Teradata   | Teradata 兼容   |
+// | `PG` | PostgreSQL | PostgreSQL 兼容 |
+// 创建test数据库使用PG兼容模式
+// CREATE DATABASE test WITH dbcompatibility = 'PG';
 // *****************************************************************************
 
 package db
@@ -38,13 +47,14 @@ import (
 // Connection
 // -----------------------------------------------------------------------------
 
-func NewOpenGaussSql(config Config) *Api {
+func NewOpenGauss(config Config) *Api {
 	config.StringValue(&config.Host, "127.0.0.1")
 	config.StringValue(&config.Port, "5432")
 	config.StringValue(&config.Username, "omm")
 	config.StringValue(&config.Password, "")
 	config.StringValue(&config.Charset, "utf8")
 	config.StringValue(&config.Schema, "public")
+	config.StringValue(&config.Mode, "PG")
 	config.IntValue(&config.ConnectTimeout, 5)
 	config.IntValue(&config.MaxIdleConns, 10)
 	config.IntValue(&config.MaxOpenConns, 100)
@@ -118,12 +128,14 @@ func NewOpenGaussSql(config Config) *Api {
 // -----------------------------------------------------------------------------
 
 type OpenGaussAdapter struct {
-	db *gorm.DB
+	db     *gorm.DB
+	config *Config
 }
 
-func NewOpenGaussAdapter(db *gorm.DB) *OpenGaussAdapter {
+func NewOpenGaussAdapter(db *gorm.DB, config *Config) *OpenGaussAdapter {
 	return &OpenGaussAdapter{
-		db: db,
+		db:     db,
+		config: config,
 	}
 }
 
@@ -1066,4 +1078,11 @@ func quoteSearchPath(
 	}
 
 	return quoteIdentifier(schema)
+}
+
+func (s *OpenGaussAdapter) AF(alias, field string) string {
+	if s.config.Mode == "B" {
+		return "`" + alias + "`.`" + field + "`"
+	}
+	return `"` + alias + `"."` + field + `"`
 }

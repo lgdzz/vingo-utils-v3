@@ -40,12 +40,12 @@ type ChangeLogOption struct {
 func NewDatabase(config Config) *Api {
 	var api *Api
 	switch config.Driver {
-	case "pgsql":
-		api = NewPgSql(config)
-		api.Adapter = NewPgsqlAdapter(api.DB)
+	case "kingbase":
+		api = NewKingBase(config)
+		api.Adapter = NewKingBaseAdapter(api.DB, &config)
 	case "openGauss":
-		api = NewOpenGaussSql(config)
-		api.Adapter = NewOpenGaussAdapter(api.DB)
+		api = NewOpenGauss(config)
+		api.Adapter = NewOpenGaussAdapter(api.DB, &config)
 	case "sqlite":
 		api = NewSqlite(config)
 	default:

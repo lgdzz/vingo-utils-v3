@@ -1,7 +1,12 @@
 // *****************************************************************************
 // 作者: lgdz
 // 创建时间: 2025/6/25
-// 描述：pgsql数据库
+// 描述：人大金仓数据库
+// | 模式         | 参数             | 兼容对象       | 适合场景           |
+// | ---------- | -------------- | ---------- | -------------- |
+// | **PG**     | `pg` / `0`     | PostgreSQL | PostgreSQL 系应用 |
+// | **Oracle** | `oracle` / `1` | Oracle     | Oracle 迁移      |
+// | **MySQL**  | `mysql` / `2`  | MySQL      | MySQL 迁移       |
 // *****************************************************************************
 
 package db
@@ -25,13 +30,14 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func NewPgSql(config Config) *Api {
+func NewKingBase(config Config) *Api {
 	config.StringValue(&config.Host, "127.0.0.1")
 	config.StringValue(&config.Port, "54321")
 	config.StringValue(&config.Username, "system")
 	config.StringValue(&config.Password, "123456")
 	config.StringValue(&config.Charset, "utf8mb4")
 	config.StringValue(&config.Schema, "public")
+	config.StringValue(&config.Mode, "pg")
 	config.IntValue(&config.ConnectTimeout, 5)
 	config.IntValue(&config.MaxIdleConns, 10)
 	config.IntValue(&config.MaxOpenConns, 100)
@@ -79,15 +85,16 @@ func NewPgSql(config Config) *Api {
 	return &dbApi
 }
 
-type PgsqlAdapter struct {
-	db *gorm.DB
+type KingBaseAdapter struct {
+	db     *gorm.DB
+	config *Config
 }
 
-func NewPgsqlAdapter(db *gorm.DB) *PgsqlAdapter {
-	return &PgsqlAdapter{db: db}
+func NewKingBaseAdapter(db *gorm.DB, config *Config) *KingBaseAdapter {
+	return &KingBaseAdapter{db: db, config: config}
 }
 
-func (s *PgsqlAdapter) GetDatabases() ([]DatabaseInfo, error) {
+func (s *KingBaseAdapter) GetDatabases() ([]DatabaseInfo, error) {
 	var databases = make([]DatabaseInfo, 0)
 
 	err := s.db.Raw(`
@@ -104,7 +111,7 @@ func (s *PgsqlAdapter) GetDatabases() ([]DatabaseInfo, error) {
 	return databases, err
 }
 
-func (s *PgsqlAdapter) GetTables() ([]TableInfo, error) {
+func (s *KingBaseAdapter) GetTables() ([]TableInfo, error) {
 	var tables = make([]TableInfo, 0)
 
 	err := s.db.Raw(`
@@ -132,7 +139,7 @@ func (s *PgsqlAdapter) GetTables() ([]TableInfo, error) {
 	return tables, err
 }
 
-func (s *PgsqlAdapter) GetColumns(tableName string) ([]Column, error) {
+func (s *KingBaseAdapter) GetColumns(tableName string) ([]Column, error) {
 	var columns = make([]Column, 0)
 
 	queryColumn := `
@@ -211,7 +218,7 @@ func (s *PgsqlAdapter) GetColumns(tableName string) ([]Column, error) {
 	return columns, err
 }
 
-func (s *PgsqlAdapter) GetTableDDL(table string) (string, error) {
+func (s *KingBaseAdapter) GetTableDDL(table string) (string, error) {
 	table = strings.ReplaceAll(table, "`", "``")
 
 	row := s.db.Raw(
@@ -228,13 +235,13 @@ func (s *PgsqlAdapter) GetTableDDL(table string) (string, error) {
 	return createSQL, nil
 }
 
-func (s *PgsqlAdapter) GetDatabaseName() (string, error) {
+func (s *KingBaseAdapter) GetDatabaseName() (string, error) {
 	var dbName string
 	err := s.db.Raw("SELECT current_database()").Scan(&dbName).Error
 	return dbName, err
 }
 
-func (s *PgsqlAdapter) GetTableComment(dbName, tableName string) (string, error) {
+func (s *KingBaseAdapter) GetTableComment(dbName, tableName string) (string, error) {
 	var tableComment sql.NullString
 	queryTableComment := `SELECT obj_description(c.oid, 'pg_class') 
                           FROM pg_class c 
@@ -250,12 +257,12 @@ func (s *PgsqlAdapter) GetTableComment(dbName, tableName string) (string, error)
 }
 
 // Book 数据库字典
-func (s *PgsqlAdapter) Book() string {
+func (s *KingBaseAdapter) Book() string {
 	return book.BuildPgsqlBook(s.db)
 }
 
 // ModelFiles 生成模型文件
-func (s *PgsqlAdapter) ModelFiles(tableNames ...string) (bool, error) {
+func (s *KingBaseAdapter) ModelFiles(tableNames ...string) (bool, error) {
 	if err := os.MkdirAll("model", 0777); err != nil {
 		return false, fmt.Errorf("创建 model 目录失败: %w", err)
 	}
@@ -273,7 +280,7 @@ func (s *PgsqlAdapter) ModelFiles(tableNames ...string) (bool, error) {
 	return true, nil
 }
 
-func (s *PgsqlAdapter) modelFile(tableName string) (bool, error) {
+func (s *KingBaseAdapter) modelFile(tableName string) (bool, error) {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("⚠️ 发生 panic，可能是数据库连接失败")
@@ -363,7 +370,7 @@ func (s *PgsqlAdapter) modelFile(tableName string) (bool, error) {
 }
 
 // QueryWhereFindInSet 在字符串[1,2,3...]集合中查找
-func (s *PgsqlAdapter) QueryWhereFindInSet(db *gorm.DB, input TextSlice, column string) *gorm.DB {
+func (s *KingBaseAdapter) QueryWhereFindInSet(db *gorm.DB, input TextSlice, column string) *gorm.DB {
 	if db == nil {
 		db = s.db
 	}
@@ -385,24 +392,24 @@ func (s *PgsqlAdapter) QueryWhereFindInSet(db *gorm.DB, input TextSlice, column 
 	return db
 }
 
-func (s *PgsqlAdapter) JsonExtract(column string, key string) string {
+func (s *KingBaseAdapter) JsonExtract(column string, key string) string {
 	return fmt.Sprintf("(%v->>'%v')::numeric", column, key)
 }
 
-func (s *PgsqlAdapter) CountWithCondition(condition string) string {
+func (s *KingBaseAdapter) CountWithCondition(condition string) string {
 	return fmt.Sprintf("COUNT(*) FILTER (WHERE %s)", condition)
 }
 
-func (s *PgsqlAdapter) SumWithCondition(condition string, column string) string {
+func (s *KingBaseAdapter) SumWithCondition(condition string, column string) string {
 	return fmt.Sprintf("SUM(%s) FILTER (WHERE %s)", column, condition)
 }
 
-func (s *PgsqlAdapter) AvgWithCondition(condition string, column string) string {
+func (s *KingBaseAdapter) AvgWithCondition(condition string, column string) string {
 	return fmt.Sprintf("AVG(%s) FILTER (WHERE %s)", column, condition)
 }
 
 // GroupExpr 分组表达式
-func (s *PgsqlAdapter) GroupExpr(column string, defaultValue ...string) string {
+func (s *KingBaseAdapter) GroupExpr(column string, defaultValue ...string) string {
 	dv := "未知"
 	if len(defaultValue) > 0 {
 		dv = defaultValue[0]
@@ -413,19 +420,19 @@ func (s *PgsqlAdapter) GroupExpr(column string, defaultValue ...string) string {
 }
 
 // DistinctCount 去重统计
-func (s *PgsqlAdapter) DistinctCount(column string) string {
+func (s *KingBaseAdapter) DistinctCount(column string) string {
 	return fmt.Sprintf("count(DISTINCT %s)", column)
 }
 
-func (s *PgsqlAdapter) ColumnGroupCountExpr(column string, category ...string) string {
+func (s *KingBaseAdapter) ColumnGroupCountExpr(column string, category ...string) string {
 	return s.columnGroupExpr("COUNT", "1", column, category...)
 }
 
-func (s *PgsqlAdapter) ColumnGroupSumExpr(sumColumn string, conditionColumn string, category ...string) string {
+func (s *KingBaseAdapter) ColumnGroupSumExpr(sumColumn string, conditionColumn string, category ...string) string {
 	return s.columnGroupExpr("SUM", sumColumn, conditionColumn, category...)
 }
 
-func (s *PgsqlAdapter) columnGroupExpr(method string, valueColumn string, conditionColumn string, category ...string) string {
+func (s *KingBaseAdapter) columnGroupExpr(method string, valueColumn string, conditionColumn string, category ...string) string {
 	var expr []string
 
 	for _, value := range category {
@@ -462,7 +469,7 @@ func (s *PgsqlAdapter) columnGroupExpr(method string, valueColumn string, condit
 
 // Total 汇总统计
 // exprMap key=别名	value=表达式
-func (s *PgsqlAdapter) Total(db *gorm.DB, exprMap map[string]string) map[string]any {
+func (s *KingBaseAdapter) Total(db *gorm.DB, exprMap map[string]string) map[string]any {
 	var result = map[string]any{}
 
 	expr := make([]string, 0)
@@ -478,6 +485,9 @@ func (s *PgsqlAdapter) Total(db *gorm.DB, exprMap map[string]string) map[string]
 	return result
 }
 
-func (s *PgsqlAdapter) AF(alias, field string) string {
+func (s *KingBaseAdapter) AF(alias, field string) string {
+	if s.config.Mode == "mysql" {
+		return "`" + alias + "`.`" + field + "`"
+	}
 	return `"` + alias + `"."` + field + `"`
 }
