@@ -485,6 +485,14 @@ func (s *KingBaseAdapter) Total(db *gorm.DB, exprMap map[string]string) map[stri
 	return result
 }
 
+func (s *KingBaseAdapter) QI(field string) string {
+	if s.config.Mode == "mysql" {
+		return mysqlQI(field)
+	}
+
+	return pgsqlQI(field)
+}
+
 func (s *KingBaseAdapter) AF(alias, field string) string {
 	if s.config.Mode == "mysql" {
 		return mysqlAF(alias, field)

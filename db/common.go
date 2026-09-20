@@ -521,6 +521,14 @@ func (s *Common) SumExpr(column string) string {
 	return fmt.Sprintf("COALESCE(SUM(%s),0)", column)
 }
 
+func mysqlQI(field string) string {
+	return "`" + field + "`"
+}
+
+func pgsqlQI(field string) string {
+	return `"` + field + `"`
+}
+
 func mysqlAF(alias string, field string) string {
 	if field == "*" {
 		return "`" + alias + "`.*"

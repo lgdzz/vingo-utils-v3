@@ -1080,6 +1080,14 @@ func quoteSearchPath(
 	return quoteIdentifier(schema)
 }
 
+func (s *OpenGaussAdapter) QI(field string) string {
+	if s.config.Mode == "B" {
+		return mysqlQI(field)
+	}
+
+	return pgsqlQI(field)
+}
+
 func (s *OpenGaussAdapter) AF(alias, field string) string {
 	if s.config.Mode == "B" {
 		return mysqlAF(alias, field)

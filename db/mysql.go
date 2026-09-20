@@ -412,6 +412,10 @@ func (s *MysqlAdapter) Total(db *gorm.DB, exprMap map[string]string) map[string]
 	return result
 }
 
+func (s *MysqlAdapter) QI(field string) string {
+	return mysqlQI(field)
+}
+
 func (s *MysqlAdapter) AF(alias, field string) string {
 	return mysqlAF(alias, field)
 }

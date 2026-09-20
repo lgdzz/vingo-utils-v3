@@ -478,6 +478,10 @@ func (s *PgsqlAdapter) Total(db *gorm.DB, exprMap map[string]string) map[string]
 	return result
 }
 
+func (s *PgsqlAdapter) QI(field string) string {
+	return pgsqlQI(field)
+}
+
 func (s *PgsqlAdapter) AF(alias, field string) string {
 	return pgsqlAF(alias, field)
 }
