@@ -721,7 +721,7 @@ func (s *OpenGaussAdapter) CountWithCondition(
 	condition string,
 ) string {
 	return fmt.Sprintf(
-		"COUNT(*) FILTER (WHERE %s)",
+		"SUM(CASE WHEN %s THEN 1 ELSE 0 END)",
 		condition,
 	)
 }
@@ -731,9 +731,9 @@ func (s *OpenGaussAdapter) SumWithCondition(
 	column string,
 ) string {
 	return fmt.Sprintf(
-		"SUM(%s) FILTER (WHERE %s)",
-		column,
+		"SUM(CASE WHEN %s THEN %s ELSE 0 END)",
 		condition,
+		column,
 	)
 }
 
@@ -742,9 +742,9 @@ func (s *OpenGaussAdapter) AvgWithCondition(
 	column string,
 ) string {
 	return fmt.Sprintf(
-		"AVG(%s) FILTER (WHERE %s)",
-		column,
+		"AVG(CASE WHEN %s THEN %s END)",
 		condition,
+		column,
 	)
 }
 
@@ -844,8 +844,7 @@ func (s *OpenGaussAdapter) columnGroupExpr(
 		case "COUNT":
 
 			item = fmt.Sprintf(
-				`COUNT(%s) FILTER (WHERE %s = '%s') AS "%s"`,
-				valueColumn,
+				`SUM(CASE WHEN %s = '%s' THEN 1 ELSE 0 END) AS "%s"`,
 				conditionColumn,
 				escapedValue,
 				alias,
@@ -854,10 +853,10 @@ func (s *OpenGaussAdapter) columnGroupExpr(
 		case "SUM":
 
 			item = fmt.Sprintf(
-				`COALESCE(SUM(%s) FILTER (WHERE %s = '%s'), 0) AS "%s"`,
-				valueColumn,
+				`COALESCE(SUM(CASE WHEN %s = '%s' THEN %s ELSE 0 END), 0) AS "%s"`,
 				conditionColumn,
 				escapedValue,
+				valueColumn,
 				alias,
 			)
 
