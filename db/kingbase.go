@@ -510,3 +510,11 @@ func (s *KingBaseAdapter) AFSelect(g ...AFGroup) string {
 	}
 	return strings.Join(expr, ",")
 }
+
+// Compare 比较
+func (s *KingBaseAdapter) Compare(column string, operator string, value any, typ CastType) string {
+	if s.config.Mode == "mysql" {
+		return fmt.Sprintf("%s %s %v", mysqlCast(column, typ), operator, value)
+	}
+	return fmt.Sprintf("%s %s %v", pgsqlCast(column, typ), operator, value)
+}

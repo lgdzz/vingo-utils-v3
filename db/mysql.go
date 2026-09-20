@@ -429,3 +429,8 @@ func (s *MysqlAdapter) AFSelect(g ...AFGroup) string {
 	}
 	return strings.Join(expr, ",")
 }
+
+// Compare 比较
+func (s *MysqlAdapter) Compare(column string, operator string, value any, typ CastType) string {
+	return fmt.Sprintf("%s %s %v", mysqlCast(column, typ), operator, value)
+}

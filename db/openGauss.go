@@ -694,23 +694,8 @@ func (s *OpenGaussAdapter) QueryWhereFindInSet(
 // JSON
 // -----------------------------------------------------------------------------
 
-func (s *OpenGaussAdapter) JsonExtract(
-	column string,
-	key string,
-) string {
-	// key 不是 SQL 参数位置，因此这里必须转义。
-	// JSON ->> 本身是 openGauss 支持的 JSON 操作符。
-	escapedKey := strings.ReplaceAll(
-		key,
-		"'",
-		"''",
-	)
-
-	return fmt.Sprintf(
-		"(%s->>'%s')::numeric",
-		column,
-		escapedKey,
-	)
+func (s *OpenGaussAdapter) JsonExtract(column string, key string) string {
+	return fmt.Sprintf("NULLIF(%s->>'%s', '')::numeric", column, key)
 }
 
 // -----------------------------------------------------------------------------
@@ -720,6 +705,10 @@ func (s *OpenGaussAdapter) JsonExtract(
 func (s *OpenGaussAdapter) CountWithCondition(
 	condition string,
 ) string {
+	fmt.Println(fmt.Sprintf(
+		"SUM(CASE WHEN %s THEN 1 ELSE 0 END)",
+		condition,
+	))
 	return fmt.Sprintf(
 		"SUM(CASE WHEN %s THEN 1 ELSE 0 END)",
 		condition,
@@ -752,24 +741,15 @@ func (s *OpenGaussAdapter) AvgWithCondition(
 // Group
 // -----------------------------------------------------------------------------
 
-func (s *OpenGaussAdapter) GroupExpr(
-	column string,
-	defaultValue ...string,
-) string {
-
+// GroupExpr 分组表达式
+func (s *OpenGaussAdapter) GroupExpr(column string, defaultValue ...string) string {
 	dv := "未知"
-
 	if len(defaultValue) > 0 {
 		dv = defaultValue[0]
 	}
-
-	dv = strings.ReplaceAll(dv, "'", "''")
-
-	return fmt.Sprintf(
-		"COALESCE(NULLIF(CAST(%s AS TEXT), ''), '%s')",
-		column,
-		dv,
-	)
+	// NULLIF方法，参数1==参数2，返回NULL
+	// COALESCE方法，参数1==NULL，返回参数2
+	return fmt.Sprintf("COALESCE(NULLIF(CAST(%s AS TEXT), ''), '%s')", column, dv)
 }
 
 // -----------------------------------------------------------------------------
@@ -814,54 +794,32 @@ func (s *OpenGaussAdapter) ColumnGroupSumExpr(
 	)
 }
 
-func (s *OpenGaussAdapter) columnGroupExpr(
-	method string,
-	valueColumn string,
-	conditionColumn string,
-	category ...string,
-) string {
-
-	expr := make([]string, 0, len(category))
+func (s *OpenGaussAdapter) columnGroupExpr(method string, valueColumn string, conditionColumn string, category ...string) string {
+	var expr []string
 
 	for _, value := range category {
 
-		alias := strings.ReplaceAll(
-			value,
-			"-",
-			"_",
-		)
-
-		escapedValue := strings.ReplaceAll(
-			value,
-			"'",
-			"''",
-		)
+		alias := strings.ReplaceAll(value, "-", "_")
 
 		var item string
 
 		switch method {
-
 		case "COUNT":
-
 			item = fmt.Sprintf(
 				`SUM(CASE WHEN %s = '%s' THEN 1 ELSE 0 END) AS "%s"`,
 				conditionColumn,
-				escapedValue,
+				value,
 				alias,
 			)
 
 		case "SUM":
-
 			item = fmt.Sprintf(
 				`COALESCE(SUM(CASE WHEN %s = '%s' THEN %s ELSE 0 END), 0) AS "%s"`,
-				conditionColumn,
-				escapedValue,
 				valueColumn,
+				conditionColumn,
+				value,
 				alias,
 			)
-
-		default:
-			continue
 		}
 
 		expr = append(expr, item)
@@ -875,64 +833,19 @@ func (s *OpenGaussAdapter) columnGroupExpr(
 // -----------------------------------------------------------------------------
 
 // Total 汇总统计
-//
-// exprMap:
-// key   = 别名
-// value = SQL 表达式
-//
-// 例如：
-//
-//	exprMap := map[string]string{
-//	    "total": "COUNT(*)",
-//	    "money": "SUM(amount)",
-//	}
-//
-// 最终：
-//
-// SELECT
-//
-//	COUNT(*) AS "total",
-//	SUM(amount) AS "money"
-//
-// FROM ...
-func (s *OpenGaussAdapter) Total(
-	db *gorm.DB,
-	exprMap map[string]string,
-) map[string]any {
+// exprMap key=别名	value=表达式
+func (s *OpenGaussAdapter) Total(db *gorm.DB, exprMap map[string]string) map[string]any {
+	var result = map[string]any{}
 
-	result := make(map[string]any)
-
-	if db == nil {
-		db = s.db
-	}
-
-	if len(exprMap) == 0 {
-		return result
-	}
-
-	expr := make([]string, 0, len(exprMap))
+	expr := make([]string, 0)
 
 	for key, value := range exprMap {
-
-		alias := strings.ReplaceAll(
-			key,
-			`"`,
-			`""`,
-		)
-
-		expr = append(
-			expr,
-			fmt.Sprintf(
-				`%s AS "%s"`,
-				value,
-				alias,
-			),
-		)
+		// 生成表达式文本如：`CountWithCondition("room_type='01'") AS 个人调解室`
+		expr = append(expr, fmt.Sprintf(`%s AS "%s"`, value, key))
 	}
 
-	db.Select(
-		strings.Join(expr, ","),
-	).Scan(&result)
+	db = db.Select(strings.Join(expr, ","))
+	db = db.Scan(&result)
 
 	return result
 }
@@ -1102,4 +1015,12 @@ func (s *OpenGaussAdapter) AFSelect(g ...AFGroup) string {
 		}
 	}
 	return strings.Join(expr, ",")
+}
+
+// Compare 比较
+func (s *OpenGaussAdapter) Compare(column string, operator string, value any, typ CastType) string {
+	if s.config.Mode == "B" {
+		return fmt.Sprintf("%s %s %v", mysqlCast(column, typ), operator, value)
+	}
+	return fmt.Sprintf("%s %s %v", pgsqlCast(column, typ), operator, value)
 }

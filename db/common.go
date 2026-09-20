@@ -542,3 +542,39 @@ func pgsqlAF(alias string, field string) string {
 	}
 	return `"` + alias + `"."` + field + `"`
 }
+
+type CastType string
+
+const (
+	CastInt     CastType = "INT"
+	CastFloat   CastType = "FLOAT"
+	CastDecimal CastType = "DECIMAL"
+)
+
+func mysqlCast(column string, typ CastType) string {
+	column = fmt.Sprintf("NULLIF(TRIM(%s), '')", column)
+
+	switch typ {
+	case CastInt:
+		return fmt.Sprintf("CAST(%s AS SIGNED)", column)
+	case CastFloat:
+		return fmt.Sprintf("CAST(%s AS DECIMAL(20,6))", column)
+	case CastDecimal:
+		return fmt.Sprintf("CAST(%s AS DECIMAL(20,6))", column)
+	}
+
+	return column
+}
+
+func pgsqlCast(column string, typ CastType) string {
+	column = fmt.Sprintf("NULLIF(TRIM(%s), '')", column)
+
+	switch typ {
+	case CastInt:
+		return fmt.Sprintf("CAST(%s AS BIGINT)", column)
+	case CastFloat, CastDecimal:
+		return fmt.Sprintf("CAST(%s AS NUMERIC)", column)
+	}
+
+	return column
+}

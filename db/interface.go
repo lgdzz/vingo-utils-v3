@@ -38,6 +38,8 @@ type Adapter interface {
 	QI(field string) string               // QuoteIdentifier
 	AF(alias string, field string) string // 根据兼容模式自动拼接别名字段，如：`a`.`name` 或 "a"."name"
 	AFSelect(...AFGroup) string
+
+	Compare(column string, operator string, value any, typ CastType) string // 比较
 }
 
 type AFGroup struct {
