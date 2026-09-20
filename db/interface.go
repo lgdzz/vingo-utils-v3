@@ -35,5 +35,11 @@ type Adapter interface {
 	ColumnGroupSumExpr(sumColumn string, conditionColumn string, category ...string) string
 	Total(db *gorm.DB, exprMap map[string]string) map[string]any
 
-	AF(alias string) string // 根据兼容模式自动拼接别名字段，如：`a`.`name` 或 "a"."name"
+	AF(alias string, field string) string // 根据兼容模式自动拼接别名字段，如：`a`.`name` 或 "a"."name"
+	AFSelect(...AFGroup) string
+}
+
+type AFGroup struct {
+	Alias string
+	Field []string
 }

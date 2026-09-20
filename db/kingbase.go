@@ -491,3 +491,13 @@ func (s *KingBaseAdapter) AF(alias, field string) string {
 	}
 	return `"` + alias + `"."` + field + `"`
 }
+
+func (s *KingBaseAdapter) AFSelect(g ...AFGroup) string {
+	var expr = make([]string, 0)
+	for _, v := range g {
+		for _, f := range v.Field {
+			expr = append(expr, s.AF(v.Alias, f))
+		}
+	}
+	return strings.Join(expr, ",")
+}

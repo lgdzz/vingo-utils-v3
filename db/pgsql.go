@@ -481,3 +481,13 @@ func (s *PgsqlAdapter) Total(db *gorm.DB, exprMap map[string]string) map[string]
 func (s *PgsqlAdapter) AF(alias, field string) string {
 	return `"` + alias + `"."` + field + `"`
 }
+
+func (s *PgsqlAdapter) AFSelect(g ...AFGroup) string {
+	var expr = make([]string, 0)
+	for _, v := range g {
+		for _, f := range v.Field {
+			expr = append(expr, s.AF(v.Alias, f))
+		}
+	}
+	return strings.Join(expr, ",")
+}

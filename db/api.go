@@ -40,6 +40,12 @@ type ChangeLogOption struct {
 func NewDatabase(config Config) *Api {
 	var api *Api
 	switch config.Driver {
+	case "mysql":
+		api = NewMysql(config)
+		api.Adapter = NewMysqlAdapter(api.DB)
+	case "pgsql":
+		api = NewPgSql(config)
+		api.Adapter = NewPgsqlAdapter(api.DB)
 	case "kingbase":
 		api = NewKingBase(config)
 		api.Adapter = NewKingBaseAdapter(api.DB, &config)
@@ -49,8 +55,7 @@ func NewDatabase(config Config) *Api {
 	case "sqlite":
 		api = NewSqlite(config)
 	default:
-		api = NewMysql(config)
-		api.Adapter = NewMysqlAdapter(api.DB)
+		panic("未知数据库驱动")
 	}
 
 	// 公共方法
