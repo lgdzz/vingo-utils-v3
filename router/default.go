@@ -34,7 +34,11 @@ type HookOption struct {
 	Debug     bool
 	Database  *db.Api
 	Redis     *redis.Config
-	startTime time.Time // 启动时间
+
+	AllowCross     bool                // 是否允许跨域
+	AllowCrossFunc func(r *gin.Engine) // 自定义允许跨域方法
+	TrustedProxies []string            // 受信任代理，如果要获取真实ip，则需要配置nginx所在服务器的ip
+	startTime      time.Time           // 启动时间
 }
 
 type WebItem struct {
@@ -55,7 +59,16 @@ func InitRouter(hook *Hook) {
 
 	r := gin.New()
 	r.Use(gin.Logger(), gin.Recovery())
-	_ = r.SetTrustedProxies(nil)
+
+	if option.AllowCrossFunc != nil {
+		// 自定义允许跨域方法
+		option.AllowCrossFunc(r)
+	} else if option.AllowCross {
+		// 使用默认跨域方法
+		vingo.AllowCrossDomain(r)
+	}
+
+	_ = r.SetTrustedProxies(option.TrustedProxies)
 
 	// 加载web前端
 	for _, item := range hook.LoadWeb {

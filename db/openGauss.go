@@ -705,10 +705,6 @@ func (s *OpenGaussAdapter) JsonExtract(column string, key string) string {
 func (s *OpenGaussAdapter) CountWithCondition(
 	condition string,
 ) string {
-	fmt.Println(fmt.Sprintf(
-		"SUM(CASE WHEN %s THEN 1 ELSE 0 END)",
-		condition,
-	))
 	return fmt.Sprintf(
 		"SUM(CASE WHEN %s THEN 1 ELSE 0 END)",
 		condition,
