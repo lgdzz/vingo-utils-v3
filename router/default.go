@@ -57,6 +57,13 @@ func InitRouter(hook *Hook) {
 
 	vingo.GinDebug = option.Debug
 
+	// 定义允许的方法
+	hook.AllowMethods = maputil.Merge(map[string]struct{}{
+		// 默认支持的方法
+		http.MethodGet:  {},
+		http.MethodPost: {},
+	}, hook.AllowMethods)
+
 	r := gin.New()
 	r.Use(gin.Logger(), gin.Recovery())
 
@@ -77,13 +84,6 @@ func InitRouter(hook *Hook) {
 			http.FileServer(currentItem.FS).ServeHTTP(c.Writer, c.Request)
 		})
 	}
-
-	// 定义允许的方法
-	hook.AllowMethods = maputil.Merge(map[string]struct{}{
-		// 默认支持的方法
-		http.MethodGet:  {},
-		http.MethodPost: {},
-	}, hook.AllowMethods)
 
 	// 屏蔽搜索引擎爬虫
 	vingo.ShieldRobots(r)
