@@ -104,6 +104,8 @@ func NewOpenGauss(config Config) *Api {
 		panic("Error to openGauss connection, err: " + err.Error())
 	}
 
+	db = CustomVar(db, config)
+
 	sqlDB, err := db.DB()
 	if err != nil {
 		panic("Error to get sql.DB, err: " + err.Error())
@@ -989,7 +991,7 @@ func quoteSearchPath(
 }
 
 func (s *OpenGaussAdapter) QI(field string) string {
-	if s.config.Mode == "B" {
+	if s.config.Mode == "mysql" {
 		return mysqlQI(field)
 	}
 
@@ -997,7 +999,7 @@ func (s *OpenGaussAdapter) QI(field string) string {
 }
 
 func (s *OpenGaussAdapter) AF(alias, field string) string {
-	if s.config.Mode == "B" {
+	if s.config.Mode == "mysql" {
 		return mysqlAF(alias, field)
 	}
 	return pgsqlAF(alias, field)
@@ -1015,7 +1017,7 @@ func (s *OpenGaussAdapter) AFSelect(g ...AFGroup) string {
 
 // Compare 比较
 func (s *OpenGaussAdapter) Compare(column string, operator string, value any, typ CastType) string {
-	if s.config.Mode == "B" {
+	if s.config.Mode == "mysql" {
 		return fmt.Sprintf("%s %s %v", mysqlCast(column, typ), operator, value)
 	}
 	return fmt.Sprintf("%s %s %v", pgsqlCast(column, typ), operator, value)

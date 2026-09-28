@@ -62,8 +62,13 @@ func NewPgSql(config Config) *Api {
 		panic("Error to Db connection, err: " + err.Error())
 	}
 
+	db = CustomVar(db, config)
+
 	// 连接池配置
-	sqlDB, _ := db.DB()
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic("Error to get sql.DB, err: " + err.Error())
+	}
 	// 最大空闲数
 	sqlDB.SetMaxIdleConns(config.MaxIdleConns)
 	// 最大连接数

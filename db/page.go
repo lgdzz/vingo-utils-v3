@@ -52,7 +52,8 @@ type PageOrder struct {
 }
 
 func (s *PageOrder) HandleColumn(tx *gorm.DB) string {
-	driver := tx.Dialector.Name()
+	dbDriver := GetDBDriver(tx)
+	dbMode := GetDBMode(tx)
 
 	sort := strings.ToLower(strings.TrimSpace(s.Sort))
 	if sort != "asc" && sort != "desc" {
@@ -68,11 +69,10 @@ func (s *PageOrder) HandleColumn(tx *gorm.DB) string {
 			panic("字段名非法")
 		}
 
-		switch driver {
-		case "postgres":
-			segments[i] = "\"" + seg + "\""
-		case "mysql":
+		if dbDriver == "mysql" || dbMode == "mysql" {
 			segments[i] = "`" + seg + "`"
+		} else {
+			segments[i] = "\"" + seg + "\""
 		}
 	}
 	return fmt.Sprintf("%s %s", strings.Join(segments, "."), sort)

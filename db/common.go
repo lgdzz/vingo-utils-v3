@@ -23,7 +23,13 @@ import (
 
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/lgdzz/vingo-utils-v3/moment"
+	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"gorm.io/gorm"
+)
+
+const (
+	VinDBDriver = "vin_db_driver"
+	VinDBMode   = "vin_db_mode"
 )
 
 type Common struct {
@@ -70,6 +76,39 @@ type Column struct {
 	JsonName     string
 	IsPk         bool
 	BusinessType string // 业务类型：number、string、bool、datetime
+}
+
+// CustomVar 自定义变量
+func CustomVar(tx *gorm.DB, config Config, other ...vingo.KeyValue) *gorm.DB {
+	// 给 GORM DB 设置自定义参数
+	tx = tx.Set(VinDBDriver, config.Driver)
+	tx = tx.Set(VinDBMode, config.Mode)
+	for _, v := range other {
+		tx = tx.Set(v.Key, v.Value)
+	}
+	return tx
+}
+
+// GetDBDriver 获取数据库驱动
+func GetDBDriver(tx *gorm.DB) string {
+	value, ok := tx.Get(VinDBDriver)
+	if !ok {
+		return ""
+	}
+
+	dbDriver, _ := value.(string)
+	return dbDriver
+}
+
+// GetDBMode 获取数据库兼容模式
+func GetDBMode(tx *gorm.DB) string {
+	value, ok := tx.Get(VinDBMode)
+	if !ok {
+		return ""
+	}
+
+	dbMode, _ := value.(string)
+	return dbMode
 }
 
 func NewCommon(db *gorm.DB) *Common {
@@ -129,6 +168,21 @@ func (s *Common) FastCommit(handler func(tx *gorm.DB)) {
 // OrderWithTree 树结构数据排序
 func (s *Common) OrderWithTree() string {
 	return "len asc,sort asc,id asc"
+}
+
+// BuildCaseOrderSQL 根据 values 的顺序生成 CASE 排序 SQL。
+func (s *Common) BuildCaseOrderSQL(field string, values []string) string {
+	var cases strings.Builder
+
+	fmt.Fprintf(&cases, "CASE %s", field)
+
+	for i, value := range values {
+		fmt.Fprintf(&cases, " WHEN '%s' THEN %d", value, i+1)
+	}
+
+	fmt.Fprintf(&cases, " ELSE %d END", len(values)+1)
+
+	return cases.String()
 }
 
 // Exists 查询记录是否存在
