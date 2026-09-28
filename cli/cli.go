@@ -32,7 +32,7 @@ func InitCli(options Options) {
 	buildDev := flag.String("build-dev", "", "打包开发版，参数：l=linux;w=windows;m=mac;l_arm=linux arm")
 	buildProd := flag.String("build-prod", "", "打包正式版，参数：l=linux;w=windows;m=mac;l_arm=linux arm")
 
-	buildNew := flag.String("build", "", "应用打包")
+	buildNew := flag.Bool("build", false, "应用打包")
 
 	updateVingo := flag.String("v3", "", "更新vingo-v3版本")
 
@@ -59,13 +59,16 @@ func InitCli(options Options) {
 
 	if *buildDev != "" {
 		BuildProject(*buildDev, "dev")
+		os.Exit(0)
 	}
 	if *buildProd != "" {
 		BuildProject(*buildProd, "prod")
+		os.Exit(0)
 	}
 
-	if *buildNew != "" {
+	if *buildNew {
 		BuildProjectNew()
+		os.Exit(0)
 	}
 
 	if *updateVingo != "" {
