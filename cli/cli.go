@@ -72,7 +72,8 @@ func InitCli(options Options) {
 func BuildProject(value string, version string) {
 	var goos string
 	var osName string
-	var gOARCH = "amd64"
+	var goarch = "amd64"
+
 	switch value {
 	case "l":
 		goos = "linux"
@@ -83,39 +84,39 @@ func BuildProject(value string, version string) {
 	case "m":
 		goos = "darwin"
 		osName = "mac"
-		gOARCH = "amd64"
 	case "m_arm":
 		goos = "darwin"
 		osName = "mac"
-		gOARCH = "arm64"
+		goarch = "arm64"
 	case "l_arm":
 		goos = "linux"
 		osName = "linux"
-		gOARCH = "arm64"
-	}
-	var err error
-	if err = os.Setenv("CGO_ENABLED", "0"); err != nil {
-		log.Println("设置CGO_ENABLED错误：", err.Error())
-		os.Exit(0)
-	}
-	if err = os.Setenv("GOOS", goos); err != nil {
-		log.Println("设置GOOS错误：", err.Error())
-		os.Exit(0)
-	}
-	if err = os.Setenv("GOARCH", gOARCH); err != nil {
-		log.Println("设置GOARCH错误：", err.Error())
-		os.Exit(0)
+		goarch = "arm64"
+	default:
+		log.Printf("❌ 不支持的编译目标: %s", value)
+		return
 	}
 
-	fmt.Println("开始打包:", osName, gOARCH)
+	log.Println("开始打包:", osName, goarch)
 
-	var moduleName = vingo.GetModuleName()
-	var outputName = fmt.Sprintf("%v.%v-%v_%v", moduleName, version, osName, gOARCH)
+	moduleName := vingo.GetModuleName()
+
+	outputName := fmt.Sprintf(
+		"%s.%s-%s_%s",
+		moduleName,
+		version,
+		osName,
+		goarch,
+	)
+
 	if osName == "windows" {
 		outputName += ".exe"
 	}
 
-	_ = os.MkdirAll("output", 0777)
+	if err := os.MkdirAll("output", 0777); err != nil {
+		log.Println("❌ 创建输出目录失败:", err)
+		return
+	}
 
 	outputName = filepath.Join("output", outputName)
 
@@ -123,28 +124,49 @@ func BuildProject(value string, version string) {
 	finalVersion := fmt.Sprintf("%s_%s", version, buildTimeVersion)
 
 	ldflags := strings.Join([]string{
-		"-X " + moduleName + "/extend/config.version=" + version,
-		"-X github.com/lgdzz/vingo-utils-v3/cli.Version=" + finalVersion,
+		"-s",
+		"-w",
+		"-X", moduleName + "/extend/config.version=" + version,
+		"-X", "github.com/lgdzz/vingo-utils-v3/cli.Version=" + finalVersion,
 	}, " ")
 
-	log.Println(strings.Join([]string{"go", "build", "-ldflags=" + ldflags, "-o", outputName}, " "))
-
-	// 执行打包命令
-	cmd := exec.Command("go", "build", "-ldflags="+ldflags, "-o", outputName)
-	err = cmd.Run()
-	if err != nil {
-		log.Println("执行打包命令错误：", err.Error())
-		os.Exit(0)
+	args := []string{
+		"build",
+		"-trimpath",
+		"-buildvcs=false",
+		"-ldflags=" + ldflags,
+		"-o", outputName,
 	}
 
-	// 获取文件信息
+	log.Println("执行:", "go", strings.Join(args, " "))
+
+	startTime := time.Now()
+
+	cmd := exec.Command("go", args...)
+
+	// 不修改当前程序的环境变量，只对本次编译生效
+	cmd.Env = append(os.Environ(),
+		"CGO_ENABLED=0",
+		"GOOS="+goos,
+		"GOARCH="+goarch,
+	)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		log.Println("❌ 执行打包失败:", err)
+		return
+	}
+
 	fileInfo, err := os.Stat(outputName)
 	if err != nil {
-		log.Println("获取打包文件信息错误：", err.Error())
+		log.Println("❌ 获取打包文件信息失败:", err)
+		return
 	}
-	fileSize := fileInfo.Size()
+
 	log.Println("✅ 文件名称:", outputName)
-	log.Println("✅ 文件大小:", vingo.FormatBytes(fileSize, 2))
+	log.Println("✅ 文件大小:", vingo.FormatBytes(fileInfo.Size(), 2))
+	log.Println("✅ 编译耗时:", time.Since(startTime).Round(time.Millisecond))
 	log.Println("✅ 打包完成")
-	os.Exit(0)
 }
