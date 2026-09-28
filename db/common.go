@@ -23,7 +23,6 @@ import (
 
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/lgdzz/vingo-utils-v3/moment"
-	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"gorm.io/gorm"
 )
 
@@ -78,37 +77,38 @@ type Column struct {
 	BusinessType string // 业务类型：number、string、bool、datetime
 }
 
-// CustomVar 自定义变量
-func CustomVar(tx *gorm.DB, config Config, other ...vingo.KeyValue) *gorm.DB {
-	// 给 GORM DB 设置自定义参数
-	tx = tx.Set(VinDBDriver, config.Driver)
-	tx = tx.Set(VinDBMode, config.Mode)
-	for _, v := range other {
-		tx = tx.Set(v.Key, v.Value)
+type CustomDialector struct {
+	gorm.Dialector
+
+	DriverName string
+	ModeName   string
+}
+
+func (d *CustomDialector) Driver() string {
+	return d.DriverName
+}
+
+func (d *CustomDialector) Mode() string {
+	return d.ModeName
+}
+
+func GetDBMeta(tx *gorm.DB) DBMeta {
+	if tx == nil || tx.Dialector == nil {
+		return nil
 	}
-	return tx
+
+	d, _ := tx.Dialector.(DBMeta)
+	return d
 }
 
 // GetDBDriver 获取数据库驱动
 func GetDBDriver(tx *gorm.DB) string {
-	value, ok := tx.Get(VinDBDriver)
-	if !ok {
-		return ""
-	}
-
-	dbDriver, _ := value.(string)
-	return dbDriver
+	return GetDBMeta(tx).Driver()
 }
 
 // GetDBMode 获取数据库兼容模式
 func GetDBMode(tx *gorm.DB) string {
-	value, ok := tx.Get(VinDBMode)
-	if !ok {
-		return ""
-	}
-
-	dbMode, _ := value.(string)
-	return dbMode
+	return GetDBMeta(tx).Mode()
 }
 
 func NewCommon(db *gorm.DB) *Common {

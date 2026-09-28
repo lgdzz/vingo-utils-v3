@@ -47,7 +47,14 @@ func NewMysql(config Config) *Api {
 		config.Dbname,
 		config.Charset,
 		config.ConnectTimeout)
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+
+	dialector := &CustomDialector{
+		Dialector:  mysql.Open(dsn),
+		DriverName: config.Driver,
+		ModeName:   config.Mode,
+	}
+
+	db, err := gorm.Open(dialector, &gorm.Config{
 		SkipDefaultTransaction: true,
 		PrepareStmt:            true,
 		Logger: logger.New(
@@ -68,8 +75,6 @@ func NewMysql(config Config) *Api {
 	if err != nil {
 		panic("Error to Db connection, err: " + err.Error())
 	}
-
-	db = CustomVar(db, config)
 
 	// 连接池配置
 	sqlDB, err := db.DB()

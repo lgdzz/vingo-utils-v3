@@ -47,7 +47,14 @@ func NewKingBase(config Config) *Api {
 	}
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable search_path=%s connect_timeout=%d TimeZone=Asia/Shanghai", config.Host, config.Port, config.Username, config.Password, config.Dbname, config.Schema, config.ConnectTimeout)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+
+	dialector := &CustomDialector{
+		Dialector:  postgres.Open(dsn),
+		DriverName: config.Driver,
+		ModeName:   config.Mode,
+	}
+
+	db, err := gorm.Open(dialector, &gorm.Config{
 		SkipDefaultTransaction: true,
 		PrepareStmt:            true,
 		Logger: logger.New(
@@ -67,8 +74,6 @@ func NewKingBase(config Config) *Api {
 	if err != nil {
 		panic("Error to Db connection, err: " + err.Error())
 	}
-
-	db = CustomVar(db, config)
 
 	// 连接池配置
 	sqlDB, err := db.DB()

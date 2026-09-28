@@ -77,7 +77,13 @@ func NewOpenGauss(config Config) *Api {
 		config.ConnectTimeout,
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+	dialector := &CustomDialector{
+		Dialector:  postgres.Open(dsn),
+		DriverName: config.Driver,
+		ModeName:   config.Mode,
+	}
+
+	db, err := gorm.Open(dialector, &gorm.Config{
 		SkipDefaultTransaction: true,
 		PrepareStmt:            true,
 
@@ -103,8 +109,6 @@ func NewOpenGauss(config Config) *Api {
 	if err != nil {
 		panic("Error to openGauss connection, err: " + err.Error())
 	}
-
-	db = CustomVar(db, config)
 
 	sqlDB, err := db.DB()
 	if err != nil {

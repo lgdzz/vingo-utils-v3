@@ -37,6 +37,11 @@ type ChangeLogOption struct {
 	PrimaryKeyValue any
 }
 
+type DBMeta interface {
+	Driver() string
+	Mode() string
+}
+
 func NewDatabase(config Config) *Api {
 	var api *Api
 	switch config.Driver {

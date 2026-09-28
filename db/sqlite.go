@@ -24,7 +24,13 @@ func NewSqlite(config Config) *Api {
 		Config: config,
 	}
 
-	db, err := gorm.Open(sqlite.Open(fmt.Sprintf("./%v.db", config.Dbname)), &gorm.Config{
+	dialector := &CustomDialector{
+		Dialector:  sqlite.Open(fmt.Sprintf("./%v.db", config.Dbname)),
+		DriverName: config.Driver,
+		ModeName:   config.Mode,
+	}
+
+	db, err := gorm.Open(dialector, &gorm.Config{
 		SkipDefaultTransaction: true,
 		PrepareStmt:            true,
 		Logger: logger.New(
@@ -44,8 +50,6 @@ func NewSqlite(config Config) *Api {
 	if err != nil {
 		panic("Error to Db connection, err: " + err.Error())
 	}
-
-	db = CustomVar(db, config)
 
 	// 连接池配置
 	sqlDB, err := db.DB()
