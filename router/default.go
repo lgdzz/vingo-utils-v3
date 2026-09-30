@@ -41,9 +41,12 @@ type HookOption struct {
 	startTime      time.Time           // 启动时间
 }
 
+// WebItem 前端项目需要打包在二级目录，推荐：/web/
+// 前端路由也要二级路径，与目录一致，/web/
+// 前端请求接口不需要/api前缀代理
 type WebItem struct {
 	Route string
-	FS    *assetfs.AssetFS // go-bindata-assetfs -pkg {admin} -o router/{admin}/bindata.go dist/...
+	FS    *assetfs.AssetFS // go-bindata-assetfs -pkg web -o router/web/bindata.go dist/...
 }
 
 // InitRouter 初始化路由
@@ -79,9 +82,9 @@ func InitRouter(hook *Hook) {
 
 	// 加载web前端
 	for _, item := range hook.LoadWeb {
-		currentItem := item
-		r.GET(currentItem.Route+"/*filepath", func(c *gin.Context) {
-			http.FileServer(currentItem.FS).ServeHTTP(c.Writer, c.Request)
+		r.GET(item.Route+"/*filepath", func(c *gin.Context) {
+			handler := http.StripPrefix(item.Route, http.FileServer(item.FS))
+			handler.ServeHTTP(c.Writer, c.Request)
 		})
 	}
 
