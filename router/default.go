@@ -82,6 +82,9 @@ func InitRouter(hook *Hook) {
 
 	// 加载web前端
 	for _, item := range hook.LoadWeb {
+		if item.FS.Fallback == "" {
+			item.FS.Fallback = "index.html"
+		}
 		r.GET(item.Route+"/*filepath", func(c *gin.Context) {
 			handler := http.StripPrefix(item.Route, http.FileServer(item.FS))
 			handler.ServeHTTP(c.Writer, c.Request)
