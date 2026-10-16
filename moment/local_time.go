@@ -152,10 +152,10 @@ func (t LocalTime) AddDaysWithTime(days, hour, min, sec int) LocalTime {
 }
 
 // 添加时间
-func (t LocalTime) AddTime(hour, min, sec int) LocalTime {
+func (t LocalTime) Add(sec int) LocalTime {
 	newTime := time.Time(t)
-	y, m, d := newTime.Date()
-	return LocalTime(time.Date(y, m, d, hour, min, sec, 0, newTime.Location()))
+	newTime.Add(time.Duration(sec) * time.Second)
+	return LocalTime(newTime.Add(time.Duration(sec) * time.Second))
 }
 
 // GtNow t>当前时间
