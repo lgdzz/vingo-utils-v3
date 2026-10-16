@@ -17,6 +17,7 @@ import (
 	"github.com/duke-git/lancet/v2/random"
 	"github.com/lgdzz/vingo-utils-v3/cryptor"
 	"github.com/lgdzz/vingo-utils-v3/moment"
+	"github.com/lgdzz/vingo-utils-v3/vingo"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 )
@@ -43,6 +44,9 @@ type PasswordObj struct {
 	TotpUrl         string            `json:"totpUrl,omitempty"`
 	TotpIssuer      string            `json:"totpIssuer,omitempty"`
 	TotpAccountName string            `json:"totpAccountName,omitempty"`
+
+	CollideNum         int               `json:"collideNum,omitempty"`         // 碰撞次数
+	CollideReleaseTime *moment.LocalTime `json:"collideReleaseTime,omitempty"` // 碰撞释放时间
 }
 
 type PasswordPublicObj struct {
@@ -153,12 +157,17 @@ func (s Password) GetTotpUrl() string {
 }
 
 // MatchTotp totp验证
-func (s Password) MatchTotp(code string, skew ...uint) bool {
+func (s *Password) MatchTotp(code string, skew ...uint) bool {
 	o := s.getObj()
 	if o.TotpSecret == "" {
 		// 未开启直接过
 		return true
 	}
+
+	if o.CollideReleaseTime != nil && o.CollideReleaseTime.GtNow() {
+		panic("尝试多次验证失败，触发防碰撞安全机制，请稍后再试~")
+	}
+
 	var skew_ uint = 1
 	if len(skew) > 0 {
 		skew_ = skew[0]
@@ -170,8 +179,22 @@ func (s Password) MatchTotp(code string, skew ...uint) bool {
 		Algorithm: otp.AlgorithmSHA1,
 	})
 	if err != nil {
-		return false
+		valid = false
 	}
+
+	if !valid {
+		o.CollideNum++
+		if o.CollideNum >= 3 {
+			// 超过3次更新锁定时间（1分钟）
+			o.CollideReleaseTime = vingo.Of(moment.NowLocalTime().AddTime(0, 1, 0))
+		}
+	} else {
+		o.CollideNum = 0
+		o.CollideReleaseTime = nil
+	}
+
+	*s = mustMarshalPassword(o)
+
 	return valid
 }
 
