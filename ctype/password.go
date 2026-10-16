@@ -186,7 +186,7 @@ func (s *Password) MatchTotp(code string, skew ...uint) bool {
 		o.CollideNum++
 		if o.CollideNum >= 3 {
 			// 超过3次更新锁定时间（1分钟）
-			o.CollideReleaseTime = vingo.Of(moment.NowLocalTime().AddTime(0, 1, 0))
+			o.CollideReleaseTime = vingo.Of(moment.NowLocalTime().Add(60))
 		}
 	} else {
 		o.CollideNum = 0
