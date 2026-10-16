@@ -157,7 +157,7 @@ func (s Password) GetTotpUrl() string {
 }
 
 // MatchTotp totp验证
-func (s *Password) MatchTotp(code string, skew ...uint) bool {
+func (s *Password) MatchTotp(code string, update func(password Password), skew ...uint) bool {
 	o := s.getObj()
 	if o.TotpSecret == "" {
 		// 未开启直接过
@@ -194,6 +194,9 @@ func (s *Password) MatchTotp(code string, skew ...uint) bool {
 	}
 
 	*s = mustMarshalPassword(o)
+
+	// 更新password字段，具体逻辑外部实现
+	update(*s)
 
 	return valid
 }
